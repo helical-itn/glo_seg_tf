@@ -1,5 +1,5 @@
 # Glomeruli segmentation (U-Net)
-Using deep learning (U-Net) in segmenting glomeruli on histopathological images of kidney tissue
+Using deep learning (U-Net) for segmentation of glomeruli on histopathological images of kidney tissue
 
 ## Used data
 
