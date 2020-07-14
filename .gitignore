@@ -3,6 +3,8 @@ results_by_name/
 results_by_name_binary/
 statistics/
 trained_models/
+results_by_name_512prog/
+stat_progress/
 
 .DS_Store
 .ipynb_checkpoints
@@ -32,3 +34,4 @@ tensorflow/contrib/cmake/_build/
 /api_init_files_list.txt
 /estimator_api_init_files_list.txt
 *.whl
+*.npy

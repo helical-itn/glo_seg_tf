@@ -2,7 +2,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.keras.models import *
 from tensorflow.python.keras.layers import Input, merge, Conv2D, MaxPooling2D, UpSampling2D, Dropout, Cropping2D, Add, \
-    Conv2DTranspose, BatchNormalization
+    Conv2DTranspose, BatchNormalization, InputLayer, Lambda
+from tensorflow.python.keras import Input as InputUNET
 from tensorflow.python.keras.optimizers import *
 from tensorflow.python.keras import backend as keras
 from keras.losses import sparse_categorical_crossentropy, categorical_crossentropy
@@ -207,9 +208,11 @@ def unet_og_div_2(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS, No_Classes, LearnRate):
 
 def my_unet_batch_norm(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS, No_Classes, LearnRate):
     #in this unet batch norm is included
+    # inputs = InputUNET(shape=None)
     inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
+    s = Lambda(lambda x: x / 255) (inputs)
     # ipdb.set_trace()
-    c1 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (inputs)
+    c1 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (s)
     b1 = BatchNormalization() (c1)
     # c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c1)
     p1 = MaxPooling2D((2, 2)) (b1)

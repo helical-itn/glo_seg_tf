@@ -20,90 +20,109 @@ import imageio
 # with rio.open('/home/mihael/ML/data_slides/glomeruli_sections/4_bg_Mask.jpg', 'r') as ds:
 # 	arr = ds.read()
 class read_n_play_now():
-	def __init__(self, img_rows = 1024, img_cols = 1024):
+    def __init__(self, img_rows = 1024, img_cols = 1024):
 
-		self.img_rows = img_rows
-		self.img_cols = img_cols
-		self.current_folder_path = os.path.dirname(os.path.abspath(__file__))
-		self.data_dir_path = self.current_folder_path + '/data'
-		self.results_dir_path = self.current_folder_path + '/results'
-		self.result_img_path = self.results_dir_path + '/mgs_mask_test.npy'
-		self.train_dir_path = self.data_dir_path + '/train'
-		self.img_dir_path = self.train_dir_path + '/image'
-		self.label_dir_path = self.train_dir_path + '/label'
-		self.img_play_dir = self.train_dir_path + '/image_play'
-		self.label_play_dir = self.train_dir_path + '/label_play'
-		self.img_repair_dir = self.train_dir_path + '/image_repaired'
-		self.label_repair_dir = self.train_dir_path + '/label_repaired'
-		self.test_img_dir_path = self.data_dir_path + '/test'
-		self.npy_dir_path = self.current_folder_path + '/npydata'
+        self.img_rows = img_rows
+        self.img_cols = img_cols
+        self.current_folder_path = os.path.dirname(os.path.abspath(__file__))
+        self.data_dir_path = self.current_folder_path + '/data'
+        self.results_dir_path = self.current_folder_path + '/results'
+        self.result_img_path = self.results_dir_path + '/mgs_mask_test.npy'
+        self.train_dir_path = self.data_dir_path + '/train'
+        self.img_dir_path = self.train_dir_path + '/image'
+        self.label_dir_path = self.train_dir_path + '/label'
+        self.img_play_dir = self.train_dir_path + '/image_play'
+        self.label_play_dir = self.train_dir_path + '/label_play'
+        self.img_repair_dir = self.train_dir_path + '/image_repaired'
+        self.label_repair_dir = self.train_dir_path + '/label_repaired'
+        self.test_img_dir_path = self.data_dir_path + '/test'
+        self.test_512 = self.data_dir_path + '/test_512'
+        self.npy_dir_path = self.current_folder_path + '/npydata'
 
-# img_path = masks_altering_path + '/' + 'HE_3_Mask_bg_01_01.jpg'
-# a = np.asarray(Image.open(img_path))
+    # img_path = masks_altering_path + '/' + 'HE_3_Mask_bg_01_01.jpg'
+    # a = np.asarray(Image.open(img_path))
 
-#CONVERT LABELS TO ONE HOT LABELS##################################################
-# for filename in labels_1024_path:
-# 	file_path = labels_1024_path + '/' + filename
-# 	arr_mask = np.asarray(Image.open(file_path))
-# 	arr_mask[arr_mask==160] = [1, 0, 0]
-# 	arr_mask[arr_mask==60] = [0, 1, 0]
-# 	arr_mask[arr_mask==140] = [0, 0, 1]
-##################################################################################
-	def lower_resolution(self, basewidth):
-		#LOWER IMAGE RESOLUTION
-		_, _, files = next(os.walk(self.img_dir_path))
-		for filename in files:
-			# image_path = self.img_dir_path + '/' + filename
-			# img = Image.open(image_path)
-			# wpercent = (basewidth / float(img.size[0]))
-			# hsize = int((float(img.size[1]) * float(wpercent)))
-			# img = img.resize((basewidth, hsize), Image.ANTIALIAS)
-			# new_file_path = self.img_512_dir + '/' + filename
-			# img.save(new_file_path)
+    #CONVERT LABELS TO ONE HOT LABELS##################################################
+    # for filename in labels_1024_path:
+    # 	file_path = labels_1024_path + '/' + filename
+    # 	arr_mask = np.asarray(Image.open(file_path))
+    # 	arr_mask[arr_mask==160] = [1, 0, 0]
+    # 	arr_mask[arr_mask==60] = [0, 1, 0]
+    # 	arr_mask[arr_mask==140] = [0, 0, 1]
+    ##################################################################################
+    def lower_resolution(self, basewidth):
+        #LOWER IMAGE RESOLUTION
+        self.new_image_dir = self.train_dir_path + '/image_' + str(basewidth)
+        self.new_label_dir = self.train_dir_path + '/label_' + str(basewidth)
+        try:
+            if not os.path.exists(self.new_image_dir):
+                os.mkdir(self.new_image_dir)
+            if not os.path.exists(self.new_label_dir):
+                os.mkdir(self.new_label_dir)
+        except OSError:
+            print ("Creation of the directory failed" )
 
-			label_path = self.label_dir_path + '/' + filename[:-4] + '.png'
-			img = Image.open(label_path)
-			wpercent = (basewidth / float(img.size[0]))
-			hsize = int((float(img.size[1]) * float(wpercent)))
-			img = img.resize((basewidth, hsize), Image.ANTIALIAS)
-			# ipdb.set_trace()
-			label_file_path = self.label_512_dir + '/' + filename[:-4] + '.png'
-			img.save(label_file_path)
+        _, _, files = next(os.walk(self.img_dir_path))
+        for filename in files:
+            image_path = self.img_dir_path + '/' + filename
+            img = Image.open(image_path)
+            wpercent = (basewidth / float(img.size[0]))
+            hsize = int((float(img.size[1]) * float(wpercent)))
+            # img = img.resize((basewidth, hsize), Image.NEAREST)
+            img = img.resize((basewidth, basewidth), Image.BICUBIC)
+            new_file_path = self.new_image_dir + '/' + filename
+            img.save(new_file_path)
 
-	def copy_paste_files(self):
-		counter = 1
-		for filename in os.listdir(self.img_dir_path):
-			img_path = self.img_dir_path + '/' + filename
-			label_path = self.label_dir_path + '/' + filename[:-4] + '.png'
-			new_img_path = self.img_repair_dir + '/' + str(counter) + '.jpg'
-			new_label_path = self.label_repair_dir + '/' + str(counter) + '.png'
-			shutil.copyfile(img_path, new_img_path)
-			shutil.copyfile(label_path, new_label_path)
-			counter += 1
+            # label_path = self.label_dir_path + '/' + filename[:-4] + '.png'
+            # img = Image.open(label_path)
+            # # wpercent = (basewidth / float(img.size[0]), Image.NEAREST)
+            # wpercent = (basewidth / float(img.size[0]))
+            # hsize = int((float(img.size[1]) * float(wpercent)))
+            # # img = img.resize((basewidth, hsize))
+            # img = img.resize((basewidth, basewidth), Image.NEAREST)
+            # # ipdb.set_trace()
+            # label_file_path = self.new_label_dir + '/' + filename[:-4] + '.png'
+            # img.save(label_file_path)
+    def load_norm_save(self):
+        _, _, files = next(os.walk(self.img_dir_path))
+        imgs_array = []
+        for filename in files:
+            image_path = self.img_dir_path + '/' + filename
 
-			# im1 = Image.open(file_path)
-			# im1.save(png_image_path)
-	def save_array(self):
-		counter = 1
-		imgs_array = []
-		labels_array = []
-		for filename in os.listdir(self.img_play_dir):
-			# if counter <= 2:
-			img_path = self.img_dir_path + '/' + filename
-			label_path = self.label_play_dir + '/' + filename[:-4] + '.png'
-			img = np.asarray(Image.open(img_path))
-			imgs_array.append(img)
-			label = np.asarray(Image.open(label_path))
-			labels_array.append(label)
-			counter += 1
-		print ('there are images: ', counter)
-		imgs_array = np.asarray(imgs_array)
-		img_arr_path = self.data_dir_path + '/22_imgs.npy'
-		ipdb.set_trace()
-		np.save(img_arr_path, imgs_array)
-		labels_array = np.asarray(labels_array)
-		label_arr_path = self.data_dir_path + '/22_labels.npy'
-		np.save(label_arr_path, labels_array)
+def copy_paste_files(self):
+    counter = 1
+    for filename in os.listdir(self.img_dir_path):
+        img_path = self.img_dir_path + '/' + filename
+        label_path = self.label_dir_path + '/' + filename[:-4] + '.png'
+        new_img_path = self.img_repair_dir + '/' + str(counter) + '.jpg'
+        new_label_path = self.label_repair_dir + '/' + str(counter) + '.png'
+        shutil.copyfile(img_path, new_img_path)
+        shutil.copyfile(label_path, new_label_path)
+        counter += 1
+
+    # im1 = Image.open(file_path)
+    # im1.save(png_image_path)
+def save_array(self):
+    counter = 1
+    imgs_array = []
+    labels_array = []
+    for filename in os.listdir(self.img_play_dir):
+        # if counter <= 2:
+        img_path = self.img_dir_path + '/' + filename
+        label_path = self.label_play_dir + '/' + filename[:-4] + '.png'
+        img = np.asarray(Image.open(img_path))
+        imgs_array.append(img)
+        label = np.asarray(Image.open(label_path))
+        labels_array.append(label)
+        counter += 1
+    print ('there are images: ', counter)
+    imgs_array = np.asarray(imgs_array)
+    img_arr_path = self.data_dir_path + '/22_imgs.npy'
+    ipdb.set_trace()
+    np.save(img_arr_path, imgs_array)
+    labels_array = np.asarray(labels_array)
+    label_arr_path = self.data_dir_path + '/22_labels.npy'
+    np.save(label_arr_path, labels_array)
 
 
 
@@ -182,12 +201,12 @@ class read_n_play_now():
 # masks_path = all_images_path + '/masks_no_glo'
 # masks_altering_path = all_images_path + '/masks_altering'
 # for filename in os.listdir(test_labels_1024_path):
-	# filename_path = test_labels_1024_path + '/' + filename
-	# img = Image.open(filename_path).convert('L')
-	# rgb_img = cv2.cvtColor(filename_path,cv2.COLOR_GRAY2RGB)
-	# new_path = masks_altering_path + '/' + filename
-	# rgb_img.save(new_path)
-	# Image.open(filename_path).convert('RGB').save(new_path)
+# filename_path = test_labels_1024_path + '/' + filename
+# img = Image.open(filename_path).convert('L')
+# rgb_img = cv2.cvtColor(filename_path,cv2.COLOR_GRAY2RGB)
+# new_path = masks_altering_path + '/' + filename
+# rgb_img.save(new_path)
+# Image.open(filename_path).convert('RGB').save(new_path)
 #######################################################################
 
 #Copying and pasting files from one folder to another - change image format
@@ -207,6 +226,6 @@ class read_n_play_now():
 # ipdb.set_trace()
 # pdb.set_trace()
 if __name__ == '__main__':
-	r_n_p = read_n_play_now()
-	# r_n_p.copy_paste_files()
-	r_n_p.save_array()
+    r_n_p = read_n_play_now()
+    # r_n_p.copy_paste_files()
+    r_n_p.lower_resolution(512)
