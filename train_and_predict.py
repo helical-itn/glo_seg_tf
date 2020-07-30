@@ -4,6 +4,7 @@ import os
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 from PIL import Image
 from keras.utils.np_utils import to_categorical
+from keras.utils import plot_model
 
 from unet_elements import *
 from segmentation_results_and_metrics import prediction_and_metrics
@@ -17,7 +18,7 @@ config = ConfigProto()
 config.gpu_options.allow_growth = True
 session = InteractiveSession(config=config)
 
-class unet_training(object):
+class unet_training(prediction_and_metrics):
 
     def __init__(self, continue_training = False, old_model_name = '', new_model_name = '', train_from_array = True):
 
@@ -30,7 +31,7 @@ class unet_training(object):
         self.current_folder_path = os.path.dirname(os.path.abspath(__file__))
         self.trained_models_path = self.current_folder_path + '/trained_models'
         self.data_dir_path = self.current_folder_path + '/data'
-        self.results_dir_path = self.current_folder_path + '/results'
+        self.results_dir_path = self.current_folder_path + '/results_by_name'
         self.result_img_path = self.results_dir_path + '/mgs_mask_test.npy'
         self.train_dir_path = self.data_dir_path + '/train'
         self.img_dir_path = self.train_dir_path + '/image'
@@ -57,7 +58,8 @@ class unet_training(object):
         else:
             model = unet_model
         model_checkpoint = ModelCheckpoint(new_model_path, monitor='loss', verbose=1, save_best_only=True)
-
+        plot_model(model, to_file= self.results_dir_path + "/" + self.new_model_name + '.png',
+                   show_shapes=True)
         #data loading
         if self.train_from_array == True:
             big_training_path = self.data_dir_path + '/all_images.npy'
@@ -112,39 +114,45 @@ if __name__ == '__main__':
     image_height = None
     image_width = None
     image_channels = 3
-    output_classes = 3 #in case of 3 labels predicted is glomeruli, the rest of the tissue and backgorund
+    output_classes = 6 #in case of 3 labels predicted is glomeruli, the rest of the tissue and backgorund
     #in case of 2 labels, predicted is glomeruli and the rest is background
     learning_rate = 0.0001
     batch_size = 2
-    epochs = 100
-    continue_training = True #False - it will build model from scratch and then train it, True - it will take pretrained model
+    epochs = 180
+    continue_training = False #False - it will build model from scratch and then train it, True - it will take pretrained model
     #and continue training, if True write name of the model you want to use below
-    old_model_name = '512_norm_progressive_20200714-084432'
-    new_model_name = '1024_norm_progressive'
+    old_model_name = 'Narrower_Deeper_Anet_20200721-162902'
+    new_model_name = 'Narrow_Deep_Anet'
     train_from_array = True #True - it will load training samples and labels which are saved as numpy array,
     # False - it will load training samples and labels which are saved as images in self.img_dir_path and  self.label_dir_path
+    train_and_predict = False
+    just_train = False
+    just_predict = True
 
-    start = time.time()
-    unet_model = my_unet_batch_norm(IMG_HEIGHT = image_height, IMG_WIDTH = image_width, IMG_CHANNELS = image_channels,
-                                    No_Classes = output_classes, LearnRate = learning_rate)
-    myunet = unet_training(continue_training = continue_training, old_model_name = old_model_name, new_model_name = new_model_name, train_from_array = train_from_array)
-    model_path, model_stat_folder = myunet.train(unet_model, batch_size = batch_size, epochs = epochs)
-    end = time.time()
-    print ('::::::::::::::::::::::::::::Time needed for data loading and training::::::::::::::::::::::::::::')
-    timer(start, end)
+    if train_and_predict or just_train:
+        start = time.time()
+        unet_model = narrow_deep_Anet(IMG_HEIGHT = image_height, IMG_WIDTH = image_width, IMG_CHANNELS = image_channels,
+                                        No_Classes = output_classes, LearnRate = learning_rate)
+        myunet = unet_training(continue_training = continue_training, old_model_name = old_model_name, new_model_name = new_model_name, train_from_array = train_from_array)
+        model_path, model_stat_folder = myunet.train(unet_model, batch_size = batch_size, epochs = epochs)
+        end = time.time()
+        print ('::::::::::::::::::::::::::::Time needed for data loading and training::::::::::::::::::::::::::::')
+        timer(start, end)
 
-    # model_path = '/home/mihael/ML/glo_seg_tensorflow/MAIN/trained_models/progressive_1024_150ep_20200710-160535.hdf5'
-    # model_stat_folder = '/home/mihael/ML/glo_seg_tensorflow/MAIN/stat_progress'
+    if just_predict:
+        model_path = '/home/mihael/ML/glo_seg_tensorflow/MAIN/trained_models/1024_A_net_narrow_deep_180ep_20200717-084127.hdf5'
+        model_stat_folder = '/home/mihael/ML/glo_seg_tensorflow/MAIN/stat_progress'
 
-    start = time.time()
-    predict_and_print_metrics = prediction_and_metrics(model_path = model_path, model_stat_folder = model_stat_folder, No_Classes = output_classes)
-    ## prediction_and_metrics(model_path, model_stat_folder).predict()
-    predict_and_print_metrics.predict()
-    predict_and_print_metrics.metrics_for_whole_test()
-    predict_and_print_metrics.save_predictions_as_images()
-    end = time.time()
-    print (':::::::Time needed for prediction, metrics calculation and converting to images:::::::')
-    timer(start, end)
+    if train_and_predict or just_predict:
+        start = time.time()
+        predict_and_print_metrics = prediction_and_metrics(model_path = model_path, model_stat_folder = model_stat_folder, No_Classes = output_classes)
+        ## prediction_and_metrics(model_path, model_stat_folder).predict()
+        predict_and_print_metrics.predict()
+        # predict_and_print_metrics.metrics_for_whole_test()
+        predict_and_print_metrics.save_predictions_as_images()
+        end = time.time()
+        print (':::::::Time needed for prediction, metrics calculation and converting to images:::::::')
+        timer(start, end)
 
 
 

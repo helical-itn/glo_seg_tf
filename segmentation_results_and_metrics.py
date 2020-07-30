@@ -83,6 +83,7 @@ class prediction_and_metrics(object):
         # ground_truth_array[ground_truth_array==170] = 1
         # ground_truth_array[ground_truth_array==250] = 2
         # label_arr = to_categorical(label_arr, num_classes=3, dtype = 'uint8')
+        # images_to_predict = np.divide(images_to_predict, 255) #if inputs have to be normalized
         predicted_images = model.predict(images_to_predict, batch_size=1, verbose=1)
         # _, _, labels = next(os.walk(test_labels_path))
         # for label_name in labels:

@@ -276,3 +276,558 @@ def my_unet_batch_norm(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS, No_Classes, LearnRat
     model.compile(optimizer = Adam(lr=LearnRate), loss= 'categorical_crossentropy' , metrics=['acc'])
 
     return model
+
+def mini_unet_batch_norm(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS, No_Classes, LearnRate):
+    #in this unet batch norm is included
+    # inputs = InputUNET(shape=None)
+    inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
+    # s = Lambda(lambda x: x / 255) (inputs)
+    # ipdb.set_trace()
+    c1 = Conv2D(8, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (inputs)
+    b1 = BatchNormalization() (c1)
+    # c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c1)
+    p1 = MaxPooling2D((2, 2)) (b1)
+
+    c2 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p1)
+    b2 = BatchNormalization() (c2)
+    # c2 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c2)
+    p2 = MaxPooling2D((2, 2)) (b2)
+
+    c3 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p2)
+    b3 = BatchNormalization() (c3)
+    # c3 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c3)
+    p3 = MaxPooling2D((2, 2)) (b3)
+
+    c4 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p3)
+    b4 = BatchNormalization() (c4)
+    # c4 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c4)
+    p4 = MaxPooling2D((2, 2)) (b4)
+
+    c5 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p4)
+    b5 = BatchNormalization() (c5)
+    p5 = MaxPooling2D(pool_size=(2, 2)) (b5)
+
+    c6 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p5)
+    drop6 = Dropout(0.5) (c6)
+    # c6 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (drop6)
+
+    u66 = Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same') (drop6)
+    u66 = Add()([u66, c5])
+    c66 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u66)
+    # c66 = Dropout(0.1) (c66)
+    # c66 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c66)
+
+    u6 = Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same') (c66)
+    u6 = Add()([u6, c4])
+    c6 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u6)
+    # c6 = Dropout(0.1) (c6)
+    # c6 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c6)
+
+    u7 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c6)
+    u7 = Add()([u7, c3])
+    c7 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u7)
+    # c7 = Dropout(0.1) (c7)
+    # c7 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c7)
+
+    u8 = Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same') (c7)
+    u8 = Add()([u8, c2])
+    c8 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u8)
+    # c8 = Dropout(0.1) (c8)
+    # c8 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c8)
+
+    u9 = Conv2DTranspose(8, (2, 2), strides=(2, 2), padding='same') (c8)
+    u9 = Add()([u9, c1])
+    c9 = Conv2D(8, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u9)
+    # c9 = Dropout(0.1) (c9)
+    # c9 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c9)
+
+    outputs = Conv2D(No_Classes, (1, 1), activation='softmax') (c9)
+
+    model = Model(inputs=[inputs], outputs=[outputs])
+    model.compile(optimizer = Adam(lr=LearnRate), loss= 'categorical_crossentropy' , metrics=['acc'])
+
+    return model
+
+def narrow_deep_unet(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS, No_Classes, LearnRate):
+    #in this unet batch norm is included
+    # inputs = InputUNET(shape=None)
+    inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
+    # s = Lambda(lambda x: x / 255) (inputs)
+    # ipdb.set_trace()
+    c1 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (inputs)
+    b1 = BatchNormalization() (c1)
+    # c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c1)
+    p1 = MaxPooling2D((2, 2)) (b1)
+
+    c2 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p1)
+    b2 = BatchNormalization() (c2)
+    # c2 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c2)
+    p2 = MaxPooling2D((2, 2)) (b2)
+
+    c3 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p2)
+    b3 = BatchNormalization() (c3)
+    # c3 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c3)
+    p3 = MaxPooling2D((2, 2)) (b3)
+
+    c4 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p3)
+    b4 = BatchNormalization() (c4)
+    # c4 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c4)
+    p4 = MaxPooling2D((2, 2)) (b4)
+
+    c5 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p4)
+    b5 = BatchNormalization() (c5)
+    p5 = MaxPooling2D(pool_size=(2, 2)) (b5)
+
+    c6 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p5)
+    b6 = BatchNormalization() (c6)
+    p6 = MaxPooling2D(pool_size=(2, 2)) (b6)
+
+    c7 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p6)
+    b7 = BatchNormalization() (c7)
+    p7 = MaxPooling2D(pool_size=(2, 2)) (b7)
+
+    c8 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p7)
+    b8 = BatchNormalization() (c8)
+    p8 = MaxPooling2D(pool_size=(2, 2)) (b8)
+
+    c9 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p8)
+    b9 = BatchNormalization() (c9)
+    p9 = MaxPooling2D(pool_size=(2, 2)) (b9)
+
+    c99 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p9)
+    b99 = BatchNormalization() (c99)
+    p99 = MaxPooling2D(pool_size=(2, 2)) (b99)
+
+    c10 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p99)
+    drop10 = Dropout(0.5) (c10)
+
+    u111 = Conv2DTranspose(256, (2, 2), strides=(2, 2), padding='same') (drop10)
+    u111 = Add()([u111, c99])
+    c111 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u111)
+
+    u11 = Conv2DTranspose(256, (2, 2), strides=(2, 2), padding='same') (c111)
+    u11 = Add()([u11, c9])
+    c11 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u11)
+
+    u12 = Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same') (c11)
+    u12 = Add()([u12, c8])
+    c12 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u12)
+
+    u13 = Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same') (c12)
+    u13 = Add()([u13, c7])
+    c13 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u13)
+
+    u14 = Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same') (c13)
+    u14 = Add()([u14, c6])
+    c14 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u14)
+
+    u15 = Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same') (c14)
+    u15 = Add()([u15, c5])
+    c15 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u15)
+
+    u16 = Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same') (c15)
+    u16 = Add()([u16, c4])
+    c16 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u16)
+
+    u17 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c16)
+    u17 = Add()([u17, c3])
+    c17 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u17)
+
+    u18 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c17)
+    u18 = Add()([u18, c2])
+    c18 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u18)
+
+    u19 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c18)
+    u19 = Add()([u19, c1])
+    c19 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u19)
+
+    outputs = Conv2D(No_Classes, (1, 1), activation='softmax') (c19)
+
+    model = Model(inputs=[inputs], outputs=[outputs])
+    model.compile(optimizer = Adam(lr=LearnRate), loss= 'categorical_crossentropy' , metrics=['acc'])
+
+    return model
+
+def narrow_deep_Anet(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS, No_Classes, LearnRate):
+    #in this unet batch norm is included
+    # inputs = InputUNET(shape=None)
+    inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
+    # s = Lambda(lambda x: x / 255) (inputs)
+    # ipdb.set_trace()
+    c1 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (inputs)
+    b1 = BatchNormalization() (c1)
+    # c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c1)
+    p1 = MaxPooling2D((2, 2)) (b1)
+
+    c2 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p1)
+    b2 = BatchNormalization() (c2)
+    # c2 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c2)
+    p2 = MaxPooling2D((2, 2)) (b2)
+
+    c3 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p2)
+    b3 = BatchNormalization() (c3)
+    # c3 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c3)
+    p3 = MaxPooling2D((2, 2)) (b3)
+
+    c4 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p3)
+    b4 = BatchNormalization() (c4)
+    # c4 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c4)
+    p4 = MaxPooling2D((2, 2)) (b4)
+
+    c5 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p4)
+    b5 = BatchNormalization() (c5)
+    p5 = MaxPooling2D(pool_size=(2, 2)) (b5)
+
+    c6 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p5)
+    b6 = BatchNormalization() (c6)
+    p6 = MaxPooling2D(pool_size=(2, 2)) (b6)
+
+    c7 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p6)
+    b7 = BatchNormalization() (c7)
+    p7 = MaxPooling2D(pool_size=(2, 2)) (b7)
+
+    c8 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p7)
+    b8 = BatchNormalization() (c8)
+    p8 = MaxPooling2D(pool_size=(2, 2)) (b8)
+
+    c9 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p8)
+    b9 = BatchNormalization() (c9)
+    p9 = MaxPooling2D(pool_size=(2, 2)) (b9)
+
+    c10 = Conv2D(8, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p9)
+    drop10 = Dropout(0.5) (c10)
+
+    u11 = Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same') (drop10)
+    u11 = Add()([u11, c9])
+    c11 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u11)
+
+    u12 = Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same') (c11)
+    u12 = Add()([u12, c8])
+    c12 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u12)
+
+    u13 = Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same') (c12)
+    u13 = Add()([u13, c7])
+    c13 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u13)
+
+    u14 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c13)
+    u14 = Add()([u14, c6])
+    c14 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u14)
+
+    u15 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c14)
+    u15 = Add()([u15, c5])
+    c15 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u15)
+
+    u16 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c15)
+    u16 = Add()([u16, c4])
+    c16 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u16)
+
+    u17 = Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same') (c16)
+    u17 = Add()([u17, c3])
+    c17 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u17)
+
+    u18 = Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same') (c17)
+    u18 = Add()([u18, c2])
+    c18 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u18)
+
+    u19 = Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same') (c18)
+    u19 = Add()([u19, c1])
+    c19 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u19)
+
+    outputs = Conv2D(No_Classes, (1, 1), activation='softmax') (c19)
+
+    model = Model(inputs=[inputs], outputs=[outputs])
+    model.compile(optimizer = Adam(lr=LearnRate), loss= 'categorical_crossentropy' , metrics=['acc'])
+
+    return model
+
+def narrow_deep_Mnet(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS, No_Classes, LearnRate):
+    #in this unet batch norm is included
+    # inputs = InputUNET(shape=None)
+    inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
+    # s = Lambda(lambda x: x / 255) (inputs)
+    # ipdb.set_trace()
+    c1 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (inputs)
+    b1 = BatchNormalization() (c1)
+    # c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c1)
+    p1 = MaxPooling2D((2, 2)) (b1)
+
+    c2 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p1)
+    b2 = BatchNormalization() (c2)
+    # c2 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c2)
+    p2 = MaxPooling2D((2, 2)) (b2)
+
+    c3 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p2)
+    b3 = BatchNormalization() (c3)
+    # c3 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c3)
+    p3 = MaxPooling2D((2, 2)) (b3)
+
+    c4 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p3)
+    b4 = BatchNormalization() (c4)
+    # c4 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c4)
+    p4 = MaxPooling2D((2, 2)) (b4)
+
+    c5 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p4)
+    b5 = BatchNormalization() (c5)
+    p5 = MaxPooling2D(pool_size=(2, 2)) (b5)
+
+    c6 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p5)
+    b6 = BatchNormalization() (c6)
+    p6 = MaxPooling2D(pool_size=(2, 2)) (b6)
+
+    c7 = Conv2D(8, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p6)
+    b7 = BatchNormalization() (c7)
+    p7 = MaxPooling2D(pool_size=(2, 2)) (b7)
+
+    c8 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p7)
+    b8 = BatchNormalization() (c8)
+    p8 = MaxPooling2D(pool_size=(2, 2)) (b8)
+
+    c9 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p8)
+    b9 = BatchNormalization() (c9)
+    p9 = MaxPooling2D(pool_size=(2, 2)) (b9)
+
+    c10 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p9)
+    drop10 = Dropout(0.5) (c10)
+
+    u11 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (drop10)
+    u11 = Add()([u11, c9])
+    c11 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u11)
+
+    u12 = Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same') (c11)
+    u12 = Add()([u12, c8])
+    c12 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u12)
+
+    u13 = Conv2DTranspose(8, (2, 2), strides=(2, 2), padding='same') (c12)
+    u13 = Add()([u13, c7])
+    c13 = Conv2D(8, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u13)
+
+    u14 = Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same') (c13)
+    u14 = Add()([u14, c6])
+    c14 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u14)
+
+    u15 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c14)
+    u15 = Add()([u15, c5])
+    c15 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u15)
+
+    u16 = Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same') (c15)
+    u16 = Add()([u16, c4])
+    c16 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u16)
+
+    u17 = Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same') (c16)
+    u17 = Add()([u17, c3])
+    c17 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u17)
+
+    u18 = Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same') (c17)
+    u18 = Add()([u18, c2])
+    c18 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u18)
+
+    u19 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c18)
+    u19 = Add()([u19, c1])
+    c19 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u19)
+
+    outputs = Conv2D(No_Classes, (1, 1), activation='softmax') (c19)
+
+    model = Model(inputs=[inputs], outputs=[outputs])
+    model.compile(optimizer = Adam(lr=LearnRate), loss= 'categorical_crossentropy' , metrics=['acc'])
+
+    return model
+
+def filter_Net(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS, No_Classes, LearnRate):
+    #in this unet batch norm is included
+    # inputs = InputUNET(shape=None)
+    inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
+    # s = Lambda(lambda x: x / 255) (inputs)
+    # ipdb.set_trace()
+    c1 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (inputs)
+    b1 = BatchNormalization() (c1)
+    # c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c1)
+    p1 = MaxPooling2D((2, 2)) (b1)
+
+    c2 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p1)
+    b2 = BatchNormalization() (c2)
+    # c2 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c2)
+    p2 = MaxPooling2D((2, 2)) (b2)
+
+    c3 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p2)
+    b3 = BatchNormalization() (c3)
+    # c3 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c3)
+    p3 = MaxPooling2D((2, 2)) (b3)
+
+    c4 = Conv2D(32, (5, 5), activation='relu', kernel_initializer='he_normal', padding='same') (p3)
+    b4 = BatchNormalization() (c4)
+    # c4 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c4)
+    p4 = MaxPooling2D((2, 2)) (b4)
+
+    c5 = Conv2D(32, (5, 5), activation='relu', kernel_initializer='he_normal', padding='same') (p4)
+    b5 = BatchNormalization() (c5)
+    p5 = MaxPooling2D(pool_size=(2, 2)) (b5)
+
+    c6 = Conv2D(32, (5, 5), activation='relu', kernel_initializer='he_normal', padding='same') (p5)
+    b6 = BatchNormalization() (c6)
+    p6 = MaxPooling2D(pool_size=(2, 2)) (b6)
+
+    c7 = Conv2D(32, (5, 5), activation='relu', kernel_initializer='he_normal', padding='same') (p6)
+    b7 = BatchNormalization() (c7)
+    p7 = MaxPooling2D(pool_size=(2, 2)) (b7)
+
+    c8 = Conv2D(32, (5, 5), activation='relu', kernel_initializer='he_normal', padding='same') (p7)
+    b8 = BatchNormalization() (c8)
+    p8 = MaxPooling2D(pool_size=(2, 2)) (b8)
+
+    c9 = Conv2D(32, (5, 5), activation='relu', kernel_initializer='he_normal', padding='same') (p8)
+    b9 = BatchNormalization() (c9)
+    p9 = MaxPooling2D(pool_size=(2, 2)) (b9)
+
+    c10 = Conv2D(32, (5, 5), activation='relu', kernel_initializer='he_normal', padding='same') (p9)
+    drop10 = Dropout(0.5) (c10)
+
+    u11 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (drop10)
+    u11 = Add()([u11, c9])
+    c11 = Conv2D(32, (5, 5), activation='relu', kernel_initializer='he_normal', padding='same') (u11)
+
+    u12 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c11)
+    u12 = Add()([u12, c8])
+    c12 = Conv2D(32, (5, 5), activation='relu', kernel_initializer='he_normal', padding='same') (u12)
+
+    u13 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c12)
+    u13 = Add()([u13, c7])
+    c13 = Conv2D(32, (5, 5), activation='relu', kernel_initializer='he_normal', padding='same') (u13)
+
+    u14 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c13)
+    u14 = Add()([u14, c6])
+    c14 = Conv2D(32, (5, 5), activation='relu', kernel_initializer='he_normal', padding='same') (u14)
+
+    u15 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c14)
+    u15 = Add()([u15, c5])
+    c15 = Conv2D(32, (5, 5), activation='relu', kernel_initializer='he_normal', padding='same') (u15)
+
+    u16 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c15)
+    u16 = Add()([u16, c4])
+    c16 = Conv2D(32, (5, 5), activation='relu', kernel_initializer='he_normal', padding='same') (u16)
+
+    u17 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c16)
+    u17 = Add()([u17, c3])
+    c17 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u17)
+
+    u18 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c17)
+    u18 = Add()([u18, c2])
+    c18 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u18)
+
+    u19 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c18)
+    u19 = Add()([u19, c1])
+    c19 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u19)
+
+    outputs = Conv2D(No_Classes, (1, 1), activation='softmax') (c19)
+
+    model = Model(inputs=[inputs], outputs=[outputs])
+    model.compile(optimizer = Adam(lr=LearnRate), loss= 'categorical_crossentropy' , metrics=['acc'])
+
+    return model
+
+def narrower_deeper_Anet(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS, No_Classes, LearnRate):
+    #in this unet batch norm is included
+    # inputs = InputUNET(shape=None)
+    inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
+    # s = Lambda(lambda x: x / 255) (inputs)
+    # ipdb.set_trace()
+    c1 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (inputs)
+    b1 = BatchNormalization() (c1)
+    # c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c1)
+    p1 = MaxPooling2D((2, 2)) (b1)
+
+    c2 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p1)
+    b2 = BatchNormalization() (c2)
+    # c2 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c2)
+    p2 = MaxPooling2D((2, 2)) (b2)
+
+    c3 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p2)
+    b3 = BatchNormalization() (c3)
+    # c3 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c3)
+    p3 = MaxPooling2D((2, 2)) (b3)
+
+    c4 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p3)
+    b4 = BatchNormalization() (c4)
+    # c4 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c4)
+    p4 = MaxPooling2D((2, 2)) (b4)
+
+    c5 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p4)
+    b5 = BatchNormalization() (c5)
+    p5 = MaxPooling2D(pool_size=(2, 2)) (b5)
+
+    c6 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p5)
+    b6 = BatchNormalization() (c6)
+    p6 = MaxPooling2D(pool_size=(2, 2)) (b6)
+
+    c7 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p6)
+    b7 = BatchNormalization() (c7)
+    p7 = MaxPooling2D(pool_size=(2, 2)) (b7)
+
+    c8 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p7)
+    b8 = BatchNormalization() (c8)
+    p8 = MaxPooling2D(pool_size=(2, 2)) (b8)
+
+    c9 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p8)
+    b9 = BatchNormalization() (c9)
+    p9 = MaxPooling2D(pool_size=(2, 2)) (b9)
+
+    c99 = Conv2D(8, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p9)
+    b99 = BatchNormalization() (c99)
+    p99 = MaxPooling2D(pool_size=(2, 2)) (b99)
+
+    # c999 = Conv2D(8, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p99)
+    # b999 = BatchNormalization() (c999)
+    # p999 = MaxPooling2D(pool_size=(2, 2)) (b999)
+
+    c10 = Conv2D(8, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p99)
+    drop10 = Dropout(0.5) (c10)
+
+    # u1111 = Conv2DTranspose(8, (2, 2), strides=(2, 2), padding='same') (drop10)
+    # u1111 = Add()([u1111, c999])
+    # c1111 = Conv2D(8, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u1111)
+
+    u111 = Conv2DTranspose(8, (2, 2), strides=(2, 2), padding='same') (drop10)
+    u111 = Add()([u111, c99])
+    c111 = Conv2D(8, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u111)
+
+    u11 = Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same') (c111)
+    u11 = Add()([u11, c9])
+    c11 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u11)
+
+    u12 = Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same') (c11)
+    u12 = Add()([u12, c8])
+    c12 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u12)
+
+    u13 = Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same') (c12)
+    u13 = Add()([u13, c7])
+    c13 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u13)
+
+    u14 = Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same') (c13)
+    u14 = Add()([u14, c6])
+    c14 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u14)
+
+    u15 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c14)
+    u15 = Add()([u15, c5])
+    c15 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u15)
+
+    u16 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c15)
+    u16 = Add()([u16, c4])
+    c16 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u16)
+
+    u17 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same') (c16)
+    u17 = Add()([u17, c3])
+    c17 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u17)
+
+    u18 = Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same') (c17)
+    u18 = Add()([u18, c2])
+    c18 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u18)
+
+    u19 = Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same') (c18)
+    u19 = Add()([u19, c1])
+    c19 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u19)
+
+    outputs = Conv2D(No_Classes, (1, 1), activation='softmax') (c19)
+
+    model = Model(inputs=[inputs], outputs=[outputs])
+    model.compile(optimizer = Adam(lr=LearnRate), loss= 'categorical_crossentropy' , metrics=['acc'])
+
+    return model

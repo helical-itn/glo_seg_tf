@@ -9,7 +9,7 @@ import rasterio as rio
 import shutil
 import cv2
 import imageio
-# import image_slicer
+import image_slicer
 
 # im = gdal.Open('crop_1.tif')
 # myarray = np.array(im.GetRasterBand(1).ReadAsArray())
@@ -29,6 +29,7 @@ class read_n_play_now():
         self.results_dir_path = self.current_folder_path + '/results'
         self.result_img_path = self.results_dir_path + '/mgs_mask_test.npy'
         self.train_dir_path = self.data_dir_path + '/train'
+        self.slides_dir = "/media/mihael/Hard/MUW NEW SLIDES/slide8-disease-name/tiles2"
         self.img_dir_path = self.train_dir_path + '/image'
         self.label_dir_path = self.train_dir_path + '/label'
         self.img_play_dir = self.train_dir_path + '/image_play'
@@ -52,8 +53,11 @@ class read_n_play_now():
     ##################################################################################
     def lower_resolution(self, basewidth):
         #LOWER IMAGE RESOLUTION
-        self.new_image_dir = self.train_dir_path + '/image_' + str(basewidth)
-        self.new_label_dir = self.train_dir_path + '/label_' + str(basewidth)
+        # self.new_image_dir = self.train_dir_path + '/image_' + str(basewidth)
+        # self.new_label_dir = self.train_dir_path + '/label_' + str(basewidth)
+        self.new_image_dir = self.slides_dir + '/image_' + str(basewidth)
+        self.new_label_dir = self.slides_dir + '/label_' + str(basewidth)
+
         try:
             if not os.path.exists(self.new_image_dir):
                 os.mkdir(self.new_image_dir)
@@ -62,9 +66,11 @@ class read_n_play_now():
         except OSError:
             print ("Creation of the directory failed" )
 
+        self.img_dir_path = self.slides_dir + "/img"
+        self.label_dir_path = self.slides_dir + "/lbl"
         _, _, files = next(os.walk(self.img_dir_path))
         for filename in files:
-            image_path = self.img_dir_path + '/' + filename
+            image_path = self.img_dir_path + "/" + filename
             img = Image.open(image_path)
             wpercent = (basewidth / float(img.size[0]))
             hsize = int((float(img.size[1]) * float(wpercent)))
@@ -73,21 +79,41 @@ class read_n_play_now():
             new_file_path = self.new_image_dir + '/' + filename
             img.save(new_file_path)
 
-            # label_path = self.label_dir_path + '/' + filename[:-4] + '.png'
-            # img = Image.open(label_path)
-            # # wpercent = (basewidth / float(img.size[0]), Image.NEAREST)
-            # wpercent = (basewidth / float(img.size[0]))
-            # hsize = int((float(img.size[1]) * float(wpercent)))
-            # # img = img.resize((basewidth, hsize))
-            # img = img.resize((basewidth, basewidth), Image.NEAREST)
-            # # ipdb.set_trace()
-            # label_file_path = self.new_label_dir + '/' + filename[:-4] + '.png'
-            # img.save(label_file_path)
+            label_path = self.label_dir_path + "/" + filename[:-4] + "-labelled.png"
+            img = Image.open(label_path)
+            # wpercent = (basewidth / float(img.size[0]), Image.NEAREST)
+            wpercent = (basewidth / float(img.size[0]))
+            hsize = int((float(img.size[1]) * float(wpercent)))
+            # img = img.resize((basewidth, hsize))
+            img = img.resize((basewidth, basewidth), Image.NEAREST)
+            # ipdb.set_trace()
+            label_file_path = self.new_label_dir + '/' + filename[:-4] + '.png'
+            img.save(label_file_path)
     def load_norm_save(self):
         _, _, files = next(os.walk(self.img_dir_path))
         imgs_array = []
         for filename in files:
             image_path = self.img_dir_path + '/' + filename
+
+    def slice(self, portions):
+        self.img_dir_path = self.slides_dir + "/image_2048"
+        self.label_dir_path = self.slides_dir + "/label_2048"
+        self.sliced_img_path = self.slides_dir + "/image_1024"
+        self.sliced_lbl_path = self.slides_dir + "/label_1024"
+
+        for filename in os.listdir(self.img_dir_path):
+            file_path = self.img_dir_path + '/' + filename
+            tiles = image_slicer.slice(file_path, portions, save=False)
+            filename_no_sufix = filename[:-4]
+            # slice_name = staining + '_' + filename_no_sufix + '_Mask'
+            image_slicer.save_tiles(tiles, directory=self.sliced_img_path, prefix=filename_no_sufix, format='PNG')
+            portion_name = filename[-9:-4]
+            mask_file_path = self.label_dir_path + "/" + filename #[:-4] + "-labelled.png"
+            # ipdb.set_trace()
+            # mask_file_path_to_save = test_labels_1024_path + '/' + filename_no_sufix + '.png'
+
+            tiles = image_slicer.slice(mask_file_path, portions, save=False)
+            image_slicer.save_tiles(tiles, directory=self.sliced_lbl_path, prefix=filename_no_sufix, format='PNG')
 
 def copy_paste_files(self):
     counter = 1
@@ -228,4 +254,5 @@ def save_array(self):
 if __name__ == '__main__':
     r_n_p = read_n_play_now()
     # r_n_p.copy_paste_files()
-    r_n_p.lower_resolution(512)
+    # r_n_p.lower_resolution(2048)
+    r_n_p.slice(4)
