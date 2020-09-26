@@ -1,11 +1,5 @@
 from PIL import Image
 import os
-# from libtiff import TIFF
-import numpy as np
-import ipdb
-# import ipdb
-# from osgeo import gdal
-# import rasterio as rio
 import shutil
 import imageio
 import imgaug as ia
@@ -16,7 +10,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib
+import albumentations as A
+import cv2
+import random
 # from keras.utils.np_utils import to_categorical
+# from keras.preprocessing.image import ImageDataGenerator
+
 
 class aug(object):
 	def __init__(self):
@@ -26,33 +25,37 @@ class aug(object):
 		self.aug_train_dir_path = self.data_dir_path + '/aug_train'
 		self.aug_img_dir_path = self.aug_train_dir_path + '/aug_image'
 		self.aug_label_dir_path = self.aug_train_dir_path + '/aug_label'
-		self.img_dir_path = self.train_dir_path + '/image'
-		self.img_play_dir = self.train_dir_path + '/image_play'
-		self.img_glo_dir = self.train_dir_path + '/image_glo'
-		self.img_glo_aug_dir = self.train_dir_path + '/image_glo_aug'
-		self.label_play_dir = self.train_dir_path + '/label_play'
-		self.label_dir_path = self.train_dir_path + '/label'
-		self.label_glo_dir = self.train_dir_path + '/label_glo'
-		self.label_glo_aug_dir = self.train_dir_path + '/label_glo_aug'
+		# self.img_dir_path = self.train_dir_path + '/image'
+		self.img_dir_path = '/media/mihael/Hard/MUW NEW SLIDES/train_set/images'
+		# self.label_dir_path = self.train_dir_path + '/label'
+		self.label_dir_path = '/media/mihael/Hard/MUW NEW SLIDES/train_set/labels'
 		self.results_dir_path = self.current_folder_path + '/results_by_name'
 		self.results_dir_path_TG = self.current_folder_path + '/results_by_name_TG'
 		self.results_from_training_dir_path = self.current_folder_path + '/results_from_training'
-		self.test_img_dir_path = self.data_dir_path + '/test'
-		self.test_labels_path = self.data_dir_path + '/test_labels'
+		# self.test_img_dir_path = self.data_dir_path + '/test'
+		# self.test_labels_path = self.data_dir_path + '/test_labels'
+		self.test_img_dir_path = '/media/mihael/Hard/MUW NEW SLIDES/test_set/img_test'
+		self.test_labels_path = '/media/mihael/Hard/MUW NEW SLIDES/test_set/lbl_test'
+		self.augmented_images_path = '/media/mihael/Hard/MUW NEW SLIDES/Augmented_images/augmented_images'
+		self.augmented_labels_path = '/media/mihael/Hard/MUW NEW SLIDES/Augmented_images/augmented_masks'
 		self.test_img_transform_path = self.data_dir_path + '/test_transform'
 		self.test_labels_transform_path = self.data_dir_path + '/test_labels_transform'
 		self.ground_truth_array_path = self.current_folder_path + '/' + 'ground_truth_array.npy'
 		self.predicted_images_one_hot = self.current_folder_path + '/' + 'predicted_images_one_hot.npy'
-	def visualise(self):
-		_, _, files = next(os.walk(self.img_dir_path))
-		image_path = self.img_dir_path + '/33.jpg'
-		label_path = self.label_dir_path + '/33.png'
+
+	def visualise_augmentations(self):
+		# _, _, files = next(os.walk(self.img_dir_path))
+		image_path = self.img_dir_path + '/9e837e99567dfd5fdb8cdfb9ab38da7c_20191223_132908_726 [x=16384,y=8192,w=8192,h=8192]_01_02.png'
+		label_path = self.label_dir_path + '/9e837e99567dfd5fdb8cdfb9ab38da7c_20191223_132908_726 [x=16384,y=8192,w=8192,h=8192]_01_02.png'
 		image = imageio.imread(image_path)
-		label = imageio.imread(label_path)
+		# label = imageio.imread(label_path)
+		label = np.asarray(Image.open(label_path))
+		# label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
 		# rotate = iaa.Affine(rotate=(45))
 		# rotate = iaa.Rotate((90))
-		aug = iaa.PerspectiveTransform(scale= (0.09, 0.12), mode='constant', seed=15)
-		# aug = iaa.ElasticTransformation(alpha=(3), sigma=0.25)
+		# aug = iaa.PerspectiveTransform(scale= (0.09, 0.12), mode='constant', seed=15)
+		# pers_aug = iaa.PerspectiveTransform(scale= (0.08), mode='replicate', fit_output=False, seed=15)
+		# aug = iaa.ElasticTransformation(alpha=(5), sigma=(2.5), mode='nearest')
 		# aug = iaa.imgcorruptlike.GaussianNoise(severity=2)
 		# aug = iaa.imgcorruptlike.Saturate(severity=4)
 		# aug = iaa.imgcorruptlike.DefocusBlur(severity=2)
@@ -63,233 +66,153 @@ class aug(object):
 		# aug = iaa.SigmoidContrast(gain=(8), cutoff=(0.2), per_channel=True)
 		# aug = iaa.Emboss(alpha=(1.0), strength=(0.2))
 		# aug = iaa.pillike.Autocontrast((5,20), per_channel=True)
-		augmented = aug.augment_image(image)
-		augmented_label = aug.augment_image(label)
+		# augmented = aug.augment_image(image)
+		# augmented_label = aug.augment_image(label)
 		# aug = iaa.imgcorruptlike.
-		#Augmentor
-		# p = Augmentor.Pipeline(self.img_play_dir)
-		# p.random_distortion(1, 5, 5, 70)
-		# p.process()
-		# p = Augmentor.Pipeline(self.label_play_dir)
-		# p.random_distortion(1, 5, 5, 70)
-		# p.process()
 
-		#############MAKING THE SAME AUGMENTATION FOR IMAGES AND MASKS AT ONCE!!!!!!!!!!!!!!!!!!!!!!!!!!
-		seq = iaa.Sequential([aug])
-		# label[label==170] = 1
-		# label[label==250] = 2
-		# label_arr = to_categorical(label, num_classes=3, dtype = 'uint8')
-		img_arr = np.reshape(image, (1, image.shape[0], image.shape[1], 3))
-		label_arr = np.reshape(label, (1, label.shape[0], label.shape[1], 1))
-		# ipdb.set_trace()
-		# image =
-		aug_img, aug_label = seq(images = img_arr, segmentation_maps = label_arr)
-		aug_img_back = np.reshape(aug_img, (image.shape[0], image.shape[1], 3))
-		aug_label_back = np.reshape(aug_label, (label.shape[0], label.shape[1]))
+
+		#############MAKING THE SAME AUGMENTATION FOR IMAGES AND MASKS AT ONCE WHEN USING imgaug
+		# seq = iaa.Sequential([aug, pers_aug])
+		# # label[label==170] = 1
+		# # label[label==250] = 2
+		# # label_arr = to_categorical(label, num_classes=3, dtype = 'uint8')
+		# img_arr = np.reshape(image, (1, image.shape[0], image.shape[1], 3))
+		# label_arr = np.reshape(label, (1, label.shape[0], label.shape[1], 4))
+		# # ipdb.set_trace()
+		# # image =
+		# aug_img, aug_label = seq(images = img_arr, segmentation_maps = label_arr)
+		# aug_img_back = np.reshape(aug_img, (image.shape[0], image.shape[1], 3))
+		# aug_label_back = np.reshape(aug_label, (label.shape[0], label.shape[1], 4))
 		########################################################################
 
-		# ia.imshow(p)
-		ia.imshow(aug_img_back)
-		ia.imshow(aug_label_back)
-	def play(self):
-		_, _, files = next(os.walk(self.label_dir_path))
+		#USING AUGMENTOR #################################################################
+		# p = Augmentor.Pipeline('/media/mihael/Hard/MUW NEW SLIDES/slide3-disease-name/tiles2/aug_test')
+		# p.ground_truth('/media/mihael/Hard/MUW NEW SLIDES/slide3-disease-name/tiles2/aug_test/lbl')
+		# p.random_distortion(probability=1, grid_width=16, grid_height=16, magnitude=20)
+		# aug_img, aug_lbl = p.sample(1)
+		# p.ImageDataGenerator.flow()
+		# g = p.keras_generator(batch_size=1)
+		# aug_img, aug_lbl = next(g)
+		##################################################################################
+
+		#USING AULBUMENTATIONS #################################################################
+		# aug = A.ElasticTransform(p=1, alpha=400, sigma=20, alpha_affine=0.5,
+		# 						 border_mode=cv2.BORDER_REPLICATE, interpolation=cv2.INTER_LINEAR)
+		aug = A.RandomRotate90(p=1)
+		# aug = A.Blur(blur_limit=(5,8), always_apply=False, p=1)
+		# aug = A.CLAHE (clip_limit=(4.0, 16.0), tile_grid_size=(4, 4), always_apply=False, p=1)
+		# aug = A.Downscale (scale_min=0.25, scale_max=0.4, interpolation=0, always_apply=False, p=1)
+		# aug = A.Equalize (mode='cv', by_channels=True, mask=None, mask_params=(), always_apply=False, p=1)
+		# aug = A.GaussNoise (var_limit=(50, 100), mean=0, always_apply=False, p=1)
+		# aug = A.HueSaturationValue (hue_shift_limit=30, sat_shift_limit=30, val_shift_limit=30, always_apply=False, p=1)
+		# aug = A.IAAEmboss (alpha=(0.5, 0.8), strength=(0.5, 0.8), always_apply=False, p=1)
+		# aug = A.IAASharpen (alpha=(0.5, 0.8), lightness=(0.8, 1), always_apply=False, p=1)
+		# aug = A.Solarize (threshold=(100,200), always_apply=False, p=1)
+		augmented = aug(image=image, mask=label)
+
+		# aug_label = self.elastic_transform(label, alpha=120, sigma=120 * 0.05, random_state=None)
+		image_elastic = augmented['image']
+		mask_elastic = augmented['mask']
+		##################################################################################
+
+		# image_reshaped = np.reshape(aug_img, (image.shape[1],image.shape[2],image.shape[3]))
+		# label_reshaped = np.reshape(aug_lbl, (image.shape[1],image.shape[2],image.shape[3]))
+		# plt.axis('off')
+		plt.style.use('classic')
+		plt.imshow(image)
+		plt.show()
+		plt.imshow(image_elastic)
+		plt.show()
+		plt.imshow(mask_elastic)
+		plt.show()
+		# ia.imshow(img_deformed)
+		# ia.imshow(lbl_deformed)
+
+		image_from_array = Image.fromarray(mask_elastic.astype(np.uint8))
+		image_from_array.save('/media/mihael/Hard/MUW NEW SLIDES/Augmented_images/aug_testing/aug.png')
+
+	def save_original_images(self, img_source_folder, lbl_source_folder, img_destination_folder, lbl_destination_folder):
+		_, _, files = next(os.walk(img_source_folder))
 		counter = 1
 		for filename in files:
-			# file_path = self.img_dir_path + '/' + filename
-			# img_new_name = str(counter) + '.jpg'
-			# new_image_path = self.train_dir_path + '/image_2/' + img_new_name
-			# shutil.copyfile(file_path, new_image_path)
-			label_path = self.label_dir_path + '/' + filename[:-4] + '.png'
-			label_new_name = str(counter) + '.png'
-			new_label_path = self.train_dir_path + '/label_2/' + label_new_name
-			shutil.copyfile(label_path, new_label_path)
-			counter += 1
-	
-	def img_rotate(self):
-		_, _, glo_files = next(os.walk(self.img_glo_dir))
-		_, _, img_files = next(os.walk(self.img_dir_path))
-		#image_count - will be used to save new augmented images in a way that name of the first image
-		#will be +1 comparing to the number of already existing images
-		image_count = len(img_files)
-		for filename in glo_files:
-			image_path = self.img_glo_dir + '/' + filename
-			image = imageio.imread(image_path)
-			label_path = self.label_glo_dir + '/' + filename[:-4] + '.png'
-			label = imageio.imread(label_path)
-			rotate_angles = [90, 180, 270]
-			for angle in rotate_angles:
-				rotate = iaa.Affine(rotate=(angle))
-				rotated_image = rotate.augment_image(image)
-				rotated_label = rotate.augment_image(label)
-				image_count += 1
-				new_path_image = self.img_glo_aug_dir + '/' + str(image_count) + '.jpg'
-				rotated_image = Image.fromarray(rotated_image.astype(np.uint8))
-				rotated_image.save(new_path_image)
-				new_path_label = self.label_glo_aug_dir + '/' + str(image_count) + '.png'
-				rotated_label = Image.fromarray(rotated_label.astype(np.uint8))
-				rotated_label.save(new_path_label)
+			image_path = img_source_folder + '/' + filename
+			label_path = lbl_source_folder + '/' + filename
+			aug_img_path = img_destination_folder + '/' + str(counter) + '_org.png'
+			aug_lbl_path = lbl_destination_folder + '/' + str(counter) + '_org.png'
+			counter+=1
+			shutil.copyfile(image_path, aug_img_path)
+			shutil.copyfile(label_path, aug_lbl_path)
 
-#PERSPECTIVE TRANSFORMATION IS NOT WORKING THE SAME ON IMAGES AND LABELS!
-	def perspective_transform(self, scale_range):
-		_, _, glo_files = next(os.walk(self.img_glo_dir))
-		_, _, img_files = next(os.walk(self.img_dir_path))
-		# ipdb.set_trace()
-		image_count = len(img_files)
-		for filename in glo_files:
-			image_path = self.img_glo_dir + '/' + filename
-			image = imageio.imread(image_path)
-			label_path = self.label_glo_dir + '/' + filename[:-4] + '.png'
-			label = imageio.imread(label_path)
-			aug = iaa.PerspectiveTransform(scale = scale_range, mode='constant', seed=15)
-			seq = iaa.Sequential([aug])
-			img_arr = np.reshape(image, (1, image.shape[0], image.shape[1], 3))
-			label_arr = np.reshape(label, (1, label.shape[0], label.shape[1], 1))
-			aug_img, aug_label = seq(images = img_arr, segmentation_maps = label_arr)
-			aug_img_back = np.reshape(aug_img, (image.shape[0], image.shape[1], 3))
-			aug_label_back = np.reshape(aug_label, (label.shape[0], label.shape[1]))
-			image_count += 1
-			new_path_image = self.img_glo_aug_dir + '/' + str(image_count) + '.jpg'
-			rotated_image = Image.fromarray(aug_img_back.astype(np.uint8))
-			rotated_image.save(new_path_image)
-			new_path_label = self.label_glo_aug_dir + '/' + str(image_count) + '.png'
-			rotated_label = Image.fromarray(aug_label_back.astype(np.uint8))
-			rotated_label.save(new_path_label)
+	def save_augmented_images(self, aug_name, augmented_items, image_name):
+		image_from_array = Image.fromarray(augmented_items['image'].astype(np.uint8))
+		new_image_path = self.augmented_images_path + '/' + str(image_name) + '_' + aug_name +'.png'
+		image_from_array.save(new_image_path)
+		label_from_array = Image.fromarray(augmented_items['mask'].astype(np.uint8))
+		new_label_path = self.augmented_labels_path + '/' + str(image_name) + '_' + aug_name + '.png'
+		label_from_array.save(new_label_path)
 
-	def test_perspective_transform(self, scale_range):
-		# _, _, glo_files = next(os.walk(self.img_glo_dir))
-		_, _, img_files = next(os.walk(self.test_img_dir_path))
-		# ipdb.set_trace()
-		# image_count = len(img_files)
-		for filename in img_files:
-			image_path = self.test_img_dir_path + '/' + filename
-			image = imageio.imread(image_path)
-			label_path = self.test_labels_path + '/' + filename[:-4] + '.png'
-			label = imageio.imread(label_path)
-			aug = iaa.PerspectiveTransform(scale = scale_range, mode='constant', seed=15)
-			seq = iaa.Sequential([aug])
-			img_arr = np.reshape(image, (1, image.shape[0], image.shape[1], 3))
-			label_arr = np.reshape(label, (1, label.shape[0], label.shape[1], 1))
-			aug_img, aug_label = seq(images = img_arr, segmentation_maps = label_arr)
-			aug_img_back = np.reshape(aug_img, (image.shape[0], image.shape[1], 3))
-			aug_label_back = np.reshape(aug_label, (label.shape[0], label.shape[1]))
-			# image_count += 1
-			new_path_image = self.test_img_transform_path + '/' + filename
-			rotated_image = Image.fromarray(aug_img_back.astype(np.uint8))
-			rotated_image.save(new_path_image)
-			new_path_label = self.test_labels_transform_path + '/' + filename[:-4] + '.png'
-			rotated_label = Image.fromarray(aug_label_back.astype(np.uint8))
-			rotated_label.save(new_path_label)
+	# def copy_images(self):
 
-	def img_invert(self):
+	def augment_and_save_images(self):
 		_, _, files = next(os.walk(self.img_dir_path))
-		image_count = len(files) + len(os.listdir(self.img_glo_aug_dir))
+		counter = 1
+		rotate_and_flip = A.Compose([
+			A.VerticalFlip(p=1),
+			A.RandomRotate90(p=1)
+		])
+		elastic_aug = A.ElasticTransform(p=1, alpha=400, sigma=20, alpha_affine=0.5,
+										 border_mode=cv2.BORDER_REPLICATE, interpolation=cv2.INTER_LINEAR)
+		clahe_aug = A.CLAHE (clip_limit=(4.0, 16.0), tile_grid_size=(4, 4), always_apply=False, p=1)
+		blur_aug = A.Blur(blur_limit=(5,8), always_apply=False, p=1)
+		downscale_aug = A.Downscale (scale_min=0.25, scale_max=0.4, interpolation=0, always_apply=False, p=1)
+		equalize_aug = A.Equalize (mode='cv', by_channels=True, mask=None, always_apply=False, p=1)
+		gaussnoise_aug = A.GaussNoise (var_limit=(50, 100), mean=0, always_apply=False, p=1)
+		saturate_aug = A.HueSaturationValue (hue_shift_limit=30, sat_shift_limit=30, val_shift_limit=30, p=1)
+		embos_aug = A.IAAEmboss (alpha=(0.5, 0.8), strength=(0.5, 0.8), always_apply=False, p=1)
+		sharpen_aug = A.IAASharpen (alpha=(0.5, 0.8), lightness=(0.8, 1), always_apply=False, p=1)
+		solarize_aug = A.Solarize (threshold=(100,200), always_apply=False, p=1)
+		aug_dict = {'rotate': rotate_and_flip, 'elastic':elastic_aug, 'clahe':clahe_aug, 'blur':blur_aug,
+							 'downscale': downscale_aug, 'equalize': equalize_aug, 'noise': gaussnoise_aug, 'saturate':saturate_aug,
+							 'embos':embos_aug, 'sharpen':sharpen_aug, 'solarize': solarize_aug}
+		required_aug_list = ['rotate', 'elastic', 'noise', 'saturate', 'solarize']
+
 		for filename in files:
 			image_path = self.img_dir_path + '/' + filename
 			image = imageio.imread(image_path)
-			label_path = self.label_dir_path + '/' + filename[:-4] + '.png'
-			# label = imageio.imread(label_path)
-			aug = iaa.Invert(1)
-			augmented = aug.augment_image(image)
-			image_count += 1
-			new_path_image = self.img_glo_aug_dir + '/' + str(image_count) + '.jpg'
-			augmented = Image.fromarray(augmented.astype(np.uint8))
-			augmented.save(new_path_image)
-			new_path_label = self.label_glo_aug_dir + '/' + str(image_count) + '.png'
-			shutil.copyfile(label_path, new_path_label)
-
-	def img_contrast(self):
-		_, _, files = next(os.walk(self.img_dir_path))
-		image_count = len(files) + len(os.listdir(self.img_glo_aug_dir))
-		for filename in files:
-			image_path = self.img_dir_path + '/' + filename
-			image = imageio.imread(image_path)
-			label_path = self.label_dir_path + '/' + filename[:-4] + '.png'
-			# label = imageio.imread(label_path)
-			aug = iaa.pillike.Autocontrast((5,20), per_channel=True)
-			augmented = aug.augment_image(image)
-			image_count += 1
-			new_path_image = self.img_glo_aug_dir + '/' + str(image_count) + '.jpg'
-			augmented = Image.fromarray(augmented.astype(np.uint8))
-			augmented.save(new_path_image)
-			new_path_label = self.label_glo_aug_dir + '/' + str(image_count) + '.png'
-			shutil.copyfile(label_path, new_path_label)
-
-	def img_gauss_noise(self):
-		_, _, files = next(os.walk(self.img_dir_path))
-		image_count = len(files) + len(os.listdir(self.img_glo_aug_dir))
-		for filename in files:
-			image_path = self.img_dir_path + '/' + filename
-			image = imageio.imread(image_path)
-			label_path = self.label_dir_path + '/' + filename[:-4] + '.png'
-			# label = imageio.imread(label_path)
-			aug = iaa.imgcorruptlike.GaussianNoise(severity=2)
-			augmented = aug.augment_image(image)
-			image_count += 1
-			new_path_image = self.img_glo_aug_dir + '/' + str(image_count) + '.jpg'
-			augmented = Image.fromarray(augmented.astype(np.uint8))
-			augmented.save(new_path_image)
-			new_path_label = self.label_glo_aug_dir + '/' + str(image_count) + '.png'
-			shutil.copyfile(label_path, new_path_label)
-
-	def img_saturate(self):
-		_, _, files = next(os.walk(self.img_dir_path))
-		image_count = len(files) + len(os.listdir(self.img_glo_aug_dir))
-		for filename in files:
-			image_path = self.img_dir_path + '/' + filename
-			image = imageio.imread(image_path)
-			label_path = self.label_dir_path + '/' + filename[:-4] + '.png'
-			# label = imageio.imread(label_path)
-			aug = iaa.imgcorruptlike.Saturate(severity=4)
-			augmented = aug.augment_image(image)
-			image_count += 1
-			new_path_image = self.img_glo_aug_dir + '/' + str(image_count) + '.jpg'
-			augmented = Image.fromarray(augmented.astype(np.uint8))
-			augmented.save(new_path_image)
-			new_path_label = self.label_glo_aug_dir + '/' + str(image_count) + '.png'
-			shutil.copyfile(label_path, new_path_label)
-
-	def img_defocus_blur(self):
-		_, _, files = next(os.walk(self.img_dir_path))
-		image_count = len(files) + len(os.listdir(self.img_glo_aug_dir))
-		for filename in files:
-			image_path = self.img_dir_path + '/' + filename
-			image = imageio.imread(image_path)
-			label_path = self.label_dir_path + '/' + filename[:-4] + '.png'
-			# label = imageio.imread(label_path)
-			aug = iaa.imgcorruptlike.DefocusBlur(severity=2)
-			augmented = aug.augment_image(image)
-			image_count += 1
-			new_path_image = self.img_glo_aug_dir + '/' + str(image_count) + '.jpg'
-			augmented = Image.fromarray(augmented.astype(np.uint8))
-			augmented.save(new_path_image)
-			new_path_label = self.label_glo_aug_dir + '/' + str(image_count) + '.png'
-			shutil.copyfile(label_path, new_path_label)
-
+			label_path = self.label_dir_path + '/' + filename
+			label = np.asarray(Image.open(label_path))
+			for aug_type in required_aug_list:
+				self.save_augmented_images(aug_name = aug_type,augmented_items=aug_dict[aug_type](image=image, mask=label),
+										   image_name=counter)
+			#Following 3 if loops are separated to get extra randomness
+			if bool(random.getrandbits(1)):
+				self.save_augmented_images(aug_name = 'clahe', augmented_items=aug_dict['clahe'](image=image, mask=label),
+										   image_name=counter)
+			else:
+				self.save_augmented_images(aug_name = 'equalize', augmented_items=aug_dict['equalize'](image=image, mask=label),
+										   image_name=counter)
+			if bool(random.getrandbits(1)):
+				self.save_augmented_images(aug_name = 'blur', augmented_items=aug_dict['blur'](image=image, mask=label),
+										   image_name=counter)
+			else:
+				self.save_augmented_images(aug_name = 'downscale', augmented_items=aug_dict['downscale'](image=image, mask=label),
+										   image_name=counter)
+			if bool(random.getrandbits(1)):
+				self.save_augmented_images(aug_name = 'embos', augmented_items=aug_dict['embos'](image=image, mask=label),
+										   image_name=counter)
+			else:
+				self.save_augmented_images(aug_name = 'sharpen', augmented_items=aug_dict['sharpen'](image=image, mask=label),
+										   image_name=counter)
+			counter+=1
 
 
 if __name__ == '__main__':
 	augmentation = aug()
-	# augmentation.visualise()
+	# augmentation.visualise_augmentations()
+	augmentation.save_original_images(augmentation.img_dir_path, augmentation.label_dir_path,
+									  augmentation.augmented_images_path, augmentation.augmented_labels_path)
+	augmentation.augment_and_save_images()
 
 	# augmentation.img_rotate()
-	augmentation.test_perspective_transform(scale_range = (0.15, 0.20) )
+	# augmentation.test_perspective_transform(scale_range = (0.15, 0.20) )
 
-	# augmentation.img_defocus_blur()
-	# augmentation.img_saturate()
-	# augmentation.img_gauss_noise()
-	# augmentation.img_contrast()
-	# augmentation.img_invert()
-	
-
-'''
-DONE AUGMENTATIONS:
-- ROTATION - 90, 180, 270
-Original images and rotated images are now used as base for other augmentations.
-- INVERT
-- CONTRAST
-- GAUSS NOISE
-- SATURATE
-- DEFOCUS BLUR
-rotate = iaa.Affine(rotate=(90))
-rotated_image = rotate.augment_image(image)
-'''
