@@ -39,6 +39,9 @@ class read_n_play_now():
         self.test_img_dir_path = self.data_dir_path + '/test'
         self.test_512 = self.data_dir_path + '/test_512'
         self.npy_dir_path = self.current_folder_path + '/npydata'
+        self.augmented_images_path = '/media/mihael/Hard/MUW NEW SLIDES/Augmented_images/augmented_images'
+        self.augmented_labels_path = '/media/mihael/Hard/MUW NEW SLIDES/test_set/labels'
+        self.augmented_labels_3cls_path = '/media/mihael/Hard/MUW NEW SLIDES/test_set/labels_3cls'
 
     # img_path = masks_altering_path + '/' + 'HE_3_Mask_bg_01_01.jpg'
     # a = np.asarray(Image.open(img_path))
@@ -114,6 +117,20 @@ class read_n_play_now():
 
             tiles = image_slicer.slice(mask_file_path, portions, save=False)
             image_slicer.save_tiles(tiles, directory=self.sliced_lbl_path, prefix=filename_no_sufix, format='PNG')
+
+    def labels_to_3_classes(self):
+        for filename in os.listdir(self.augmented_labels_path):
+            item_path = self.augmented_labels_path + '/' + filename
+            label_arr = np.asarray(Image.open(item_path))
+            label_arr = label_arr.copy()
+            label_arr[label_arr == 3] = 2
+            label_arr[label_arr == 4] = 2
+            label_arr[label_arr == 5] = 2
+            label_from_array = Image.fromarray(label_arr.astype(np.uint8))
+            new_label_path = self.augmented_labels_3cls_path + '/' + filename
+            label_from_array.save(new_label_path)
+
+
 
 def copy_paste_files(self):
     counter = 1
@@ -284,4 +301,4 @@ if __name__ == '__main__':
     r_n_p = read_n_play_now()
     # r_n_p.copy_paste_files()
     # r_n_p.lower_resolution(2048)
-    r_n_p.slice(4)
+    r_n_p.labels_to_3_classes()
