@@ -10,6 +10,7 @@ import shutil
 import cv2
 import imageio
 import image_slicer
+import matplotlib.pyplot as plt
 
 # im = gdal.Open('crop_1.tif')
 # myarray = np.array(im.GetRasterBand(1).ReadAsArray())
@@ -40,8 +41,8 @@ class read_n_play_now():
         self.test_512 = self.data_dir_path + '/test_512'
         self.npy_dir_path = self.current_folder_path + '/npydata'
         self.augmented_images_path = '/media/mihael/Hard/MUW NEW SLIDES/Augmented_images/augmented_images'
-        self.augmented_labels_path = '/media/mihael/Hard/MUW NEW SLIDES/test_set/labels'
-        self.augmented_labels_3cls_path = '/media/mihael/Hard/MUW NEW SLIDES/test_set/labels_3cls'
+        self.augmented_labels_path = '/media/mihael/Hard/MUW NEW SLIDES/test_set_downsampled/labels'
+        self.augmented_labels_3cls_path = '/media/mihael/Hard/MUW NEW SLIDES/test_set_downsampled/labels_3_cls'
 
     # img_path = masks_altering_path + '/' + 'HE_3_Mask_bg_01_01.jpg'
     # a = np.asarray(Image.open(img_path))
@@ -58,8 +59,8 @@ class read_n_play_now():
         #LOWER IMAGE RESOLUTION
         # self.new_image_dir = self.train_dir_path + '/image_' + str(basewidth)
         # self.new_label_dir = self.train_dir_path + '/label_' + str(basewidth)
-        self.new_image_dir = self.slides_dir + '/image_' + str(basewidth)
-        self.new_label_dir = self.slides_dir + '/label_' + str(basewidth)
+        self.new_image_dir = self.slides_dir + '/image_down_' + str(basewidth)
+        self.new_label_dir = self.slides_dir + '/label_down_' + str(basewidth)
 
         try:
             if not os.path.exists(self.new_image_dir):
@@ -167,6 +168,63 @@ def save_array(self):
     label_arr_path = self.data_dir_path + '/22_labels.npy'
     np.save(label_arr_path, labels_array)
 
+class extracting_seg_objects():
+    def __init__(self):
+        self.test_img_folder = '/media/mihael/Hard/MUW NEW SLIDES/test_set_downsampled/images'
+        self.test_lbl_folder = '/media/mihael/Hard/MUW NEW SLIDES/test_set_downsampled/labels'
+        self.data_folder = '/media/mihael/Hard/MUW NEW SLIDES/data'
+
+    def crop_part_outside_image(self, image_dimension, bot_x, top_x, bot_y, top_y):
+        if bot_x < 0:
+            bot_x = 0
+        if top_x > image_dimension - 1:
+            top_x = image_dimension -1
+        if bot_y < 0:
+            bot_y = 0
+        if top_y > image_dimension - 1:
+            bot_y = image_dimension - 1
+        return bot_x, top_x, bot_y, top_y
+
+    def extracting_objects_from_mask(self, label_list):
+        for label in label_list:
+            label_dir = self.data_folder + '/' + str(label)
+            if not os.path.exists(label_dir):
+                os.mkdir(label_dir)
+        for filename in os.listdir(self.test_lbl_folder):
+            mask_path = self.test_lbl_folder + '/' + filename
+            img_path = self.test_img_folder + '/' + filename
+            # mask=cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+            mask = np.asarray(Image.open(mask_path))
+            img = np.asarray(Image.open(img_path))#.astype(np.float32)
+            # empty_mask = np.zeros(shape = (1024, 1024), dtype=np.int8)
+            # empty_mask_3D = np.zeros(shape = (1024, 1024, 3), dtype=np.int8)
+            for label in label_list:
+                if int(label) in mask:
+                    label_filtered = cv2.inRange(mask, int(label), int(label))
+                    contours,hierarchy = cv2.findContours(label_filtered, 1, 2)
+                    for cnt in contours:
+                        empty_mask = np.zeros(shape = (1024, 1024), dtype=np.int8)
+                        # empty_mask_3D = np.zeros(shape = (1024, 1024, 3), dtype=np.int8)
+                        (x, y), radius = cv2.minEnclosingCircle(cnt)
+                        center = (int(x), int(y))
+                        radius = int(radius) + int(int(radius)*0.2)
+                        glo_mask = cv2.circle(empty_mask, center, radius, (1), -1)
+
+                        mask_float = np.float32(glo_mask)
+                        mask_RGB = cv2.cvtColor(mask_float, cv2.COLOR_GRAY2RGB)
+                        out = np.zeros_like(img)
+                        out[mask_RGB==1] = img[mask_RGB==1]
+
+                        bot_x = int(x) - radius
+                        top_x = int(x) + radius
+                        bot_y = int(y) - radius
+                        top_y = int(y) + radius
+                        bot_x, top_x, bot_y, top_y = self.crop_part_outside_image(1024, bot_x, top_x, bot_y, top_y)
+                        out = out[bot_y:top_y, bot_x:top_x]
+
+                        glo_path = self.data_folder + '/' + str(label) + '/' + \
+                                   filename +'_'+ str(contours.index(cnt)) + '.png'
+                        imageio.imwrite(glo_path, out)
 
 
 
@@ -300,5 +358,7 @@ def save_array(self):
 if __name__ == '__main__':
     r_n_p = read_n_play_now()
     # r_n_p.copy_paste_files()
-    # r_n_p.lower_resolution(2048)
-    r_n_p.labels_to_3_classes()
+    # r_n_p.lower_resolution(1024)
+    # r_n_p.labels_to_3_classes()
+    ext = extracting_seg_objects()
+    ext.extracting_objects_from_mask(label_list=[2,3,4,5])
