@@ -55,7 +55,7 @@ class prediction_and_metrics(object):
         else:
             raise AssertionError ("You have more than 3 classes. This metrics calculation is suited only for 2 or 3 classes.")
 
-    def predict(self):
+    # def predict(self):
         model = load_model(self.model_path, compile=False)
         _, _, files = next(os.walk(self.test_img_dir_path))
         images_to_predict = []
@@ -74,8 +74,8 @@ class prediction_and_metrics(object):
                 label_arr[label_arr==250] = 1
                 label_arr = to_categorical(label_arr, num_classes=self.number_of_classes, dtype = 'uint8')
             else:
-                label_arr[label_arr==170] = 1
-                label_arr[label_arr==250] = 2
+                # label_arr[label_arr==170] = 1
+                # label_arr[label_arr==250] = 2
                 label_arr = to_categorical(label_arr, num_classes=self.number_of_classes, dtype = 'uint8')
             ground_truth_array.append(label_arr)
         images_to_predict = np.asarray(images_to_predict)

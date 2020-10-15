@@ -30,6 +30,7 @@ class unet_training(prediction_and_metrics):
         self.train_from_array = train_from_array
         self.current_folder_path = os.path.dirname(os.path.abspath(__file__))
         self.trained_models_path = self.current_folder_path + '/trained_models'
+        self.trained_models_server = self.trained_models_path + '/Trained_On_Server'
         self.data_dir_path = self.current_folder_path + '/data'
         self.results_dir_path = self.current_folder_path + '/results_by_name'
         self.result_img_path = self.results_dir_path + '/mgs_mask_test.npy'
@@ -47,6 +48,8 @@ class unet_training(prediction_and_metrics):
         self.test_img_dir_path = self.data_dir_path + '/test'
         self.npy_dir_path = self.current_folder_path + '/npydata'
         self.statistics_path = self.current_folder_path + '/statistics'
+        self.aug_img = '/home/mihael/ML/glo_seg_tensorflow/MAIN/data/aug_train/aug_image'
+        self.aug_lbl = '/home/mihael/ML/glo_seg_tensorflow/MAIN/data/aug_train/aug_label'
 
     def train(self, unet_model, batch_size, epochs):
         time_stamp = time.strftime("%Y%m%d-%H%M%S")
@@ -67,15 +70,15 @@ class unet_training(prediction_and_metrics):
             big_label_path = self.data_dir_path + '/all_labels_3cls.npy'
             big_label = np.load(big_label_path)
         else:
-            _, _, files = next(os.walk(self.img_dir_path))
+            _, _, files = next(os.walk(self.aug_img))
             random.shuffle(files)
             big_training = []
             big_label = []
 
             for item_name in files:
-                item_path = self.img_dir_path + '/' + item_name
+                item_path = self.aug_img + '/' + item_name
                 label_png_name = item_name[:-4] + '.png'
-                label_path = self.label_dir_path + '/' + label_png_name
+                label_path = self.aug_lbl + '/' + label_png_name
                 item_arr = np.asarray(Image.open(item_path))
                 big_training.append(item_arr)
                 label_arr = np.asarray(Image.open(label_path))
@@ -90,8 +93,12 @@ class unet_training(prediction_and_metrics):
                 # label_one_hot[np.arange(1024),label_arr] = 1
                 # label_3D = label_arr[:,:,newaxis = 3]
                 # label_arr[label_arr==160] = 0
-                label_arr[label_arr == 170] = 1
-                label_arr[label_arr == 250] = 2
+                # label_arr[label_arr == 170] = 1
+                # label_arr[label_arr == 250] = 2
+                # label_arr[label_arr == 2] = 1
+                label_arr[label_arr == 3] = 2
+                label_arr[label_arr == 4] = 2
+                label_arr[label_arr == 5] = 2
                 # NEXT LINE IS USED TO GET MASK INPUT ARRAY IN THE RIGHT SHAPE (WHEN 2D MASK IS USED)
                 # label_arr.shape = [1024, 1024, 1]
                 label_arr = to_categorical(label_arr, num_classes=3, dtype='uint8')
@@ -114,7 +121,7 @@ if __name__ == '__main__':
     image_height = None
     image_width = None
     image_channels = 3
-    output_classes = 6 #in case of 3 labels predicted is glomeruli, the rest of the tissue and backgorund
+    output_classes = 3 #in case of 3 labels predicted is glomeruli, the rest of the tissue and backgorund
     #in case of 2 labels, predicted is glomeruli and the rest is background
     learning_rate = 0.0001
     batch_size = 2
@@ -122,8 +129,8 @@ if __name__ == '__main__':
     continue_training = False #False - it will build model from scratch and then train it, True - it will take pretrained model
     #and continue training, if True write name of the model you want to use below
     old_model_name = 'Narrower_Deeper_Anet_20200721-162902'
-    new_model_name = 'Narrow_Deep_Anet'
-    train_from_array = True #True - it will load training samples and labels which are saved as numpy array,
+    new_model_name = 'Narrow_Deep_Anet_AUG'
+    train_from_array = False #True - it will load training samples and labels which are saved as numpy array,
     # False - it will load training samples and labels which are saved as images in self.img_dir_path and  self.label_dir_path
     train_and_predict = False
     just_train = False
@@ -140,8 +147,8 @@ if __name__ == '__main__':
         timer(start, end)
 
     if just_predict:
-        model_path = '/home/mihael/ML/glo_seg_tensorflow/MAIN/trained_models/1024_A_net_narrow_deep_180ep_20200717-084127.hdf5'
-        model_stat_folder = '/home/mihael/ML/glo_seg_tensorflow/MAIN/stat_progress'
+        model_path = '/home/mihael/ML/glo_seg_tensorflow/MAIN/trained_models/Trained_On_Server/Narrow_Deep_Anet_AUG_server_20200930-132244.hdf5'
+        model_stat_folder = '/home/mihael/ML/glo_seg_tensorflow/MAIN/stat_progress/server'
 
     if train_and_predict or just_predict:
         start = time.time()

@@ -26,9 +26,9 @@ class aug(object):
 		self.aug_img_dir_path = self.aug_train_dir_path + '/aug_image'
 		self.aug_label_dir_path = self.aug_train_dir_path + '/aug_label'
 		# self.img_dir_path = self.train_dir_path + '/image'
-		self.img_dir_path = '/media/mihael/Hard/MUW NEW SLIDES/train_set/images'
+		self.img_dir_path = '/media/mihael/Hard/MUW NEW SLIDES/train_set_downsampled/images'
 		# self.label_dir_path = self.train_dir_path + '/label'
-		self.label_dir_path = '/media/mihael/Hard/MUW NEW SLIDES/train_set/labels'
+		self.label_dir_path = '/media/mihael/Hard/MUW NEW SLIDES/train_set_downsampled/labels_3_cls'
 		self.results_dir_path = self.current_folder_path + '/results_by_name'
 		self.results_dir_path_TG = self.current_folder_path + '/results_by_name_TG'
 		self.results_from_training_dir_path = self.current_folder_path + '/results_from_training'
@@ -36,8 +36,8 @@ class aug(object):
 		# self.test_labels_path = self.data_dir_path + '/test_labels'
 		self.test_img_dir_path = '/media/mihael/Hard/MUW NEW SLIDES/test_set/img_test'
 		self.test_labels_path = '/media/mihael/Hard/MUW NEW SLIDES/test_set/lbl_test'
-		self.augmented_images_path = '/media/mihael/Hard/MUW NEW SLIDES/Augmented_images/augmented_images'
-		self.augmented_labels_path = '/media/mihael/Hard/MUW NEW SLIDES/Augmented_images/augmented_masks'
+		self.augmented_images_path = '/media/mihael/Hard/MUW NEW SLIDES/train_set_downsampled/augmented_images'
+		self.augmented_labels_path = '/media/mihael/Hard/MUW NEW SLIDES/train_set_downsampled/augmented_labels'
 		self.test_img_transform_path = self.data_dir_path + '/test_transform'
 		self.test_labels_transform_path = self.data_dir_path + '/test_labels_transform'
 		self.ground_truth_array_path = self.current_folder_path + '/' + 'ground_truth_array.npy'
@@ -209,6 +209,7 @@ class aug(object):
 if __name__ == '__main__':
 	augmentation = aug()
 	# augmentation.visualise_augmentations()
+	#FIRST ORIGINAL IMAGES NEEDS TO BE COPIED WITH FUNCTION BELOW, THAN ORIGINAL IMAGES ARE AUGMENTED
 	augmentation.save_original_images(augmentation.img_dir_path, augmentation.label_dir_path,
 									  augmentation.augmented_images_path, augmentation.augmented_labels_path)
 	augmentation.augment_and_save_images()

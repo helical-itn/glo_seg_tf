@@ -170,8 +170,8 @@ def save_array(self):
 
 class extracting_seg_objects():
     def __init__(self):
-        self.test_img_folder = '/media/mihael/Hard/MUW NEW SLIDES/test_set_downsampled/images'
-        self.test_lbl_folder = '/media/mihael/Hard/MUW NEW SLIDES/test_set_downsampled/labels'
+        self.test_img_folder = '/media/mihael/Hard/MUW NEW SLIDES/slide8-disease-name/tiles2/img'
+        self.test_lbl_folder = '/media/mihael/Hard/MUW NEW SLIDES/slide8-disease-name/tiles2/lbl'
         self.data_folder = '/media/mihael/Hard/MUW NEW SLIDES/data'
 
     def crop_part_outside_image(self, image_dimension, bot_x, top_x, bot_y, top_y):
@@ -192,7 +192,7 @@ class extracting_seg_objects():
                 os.mkdir(label_dir)
         for filename in os.listdir(self.test_lbl_folder):
             mask_path = self.test_lbl_folder + '/' + filename
-            img_path = self.test_img_folder + '/' + filename
+            img_path = self.test_img_folder + '/' + filename.replace('-labelled', '')
             # mask=cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
             mask = np.asarray(Image.open(mask_path))
             img = np.asarray(Image.open(img_path))#.astype(np.float32)
@@ -203,7 +203,8 @@ class extracting_seg_objects():
                     label_filtered = cv2.inRange(mask, int(label), int(label))
                     contours,hierarchy = cv2.findContours(label_filtered, 1, 2)
                     for cnt in contours:
-                        empty_mask = np.zeros(shape = (1024, 1024), dtype=np.int8)
+                        cnt_count = 0
+                        empty_mask = np.zeros(shape = (8192, 8192), dtype=np.int8)
                         # empty_mask_3D = np.zeros(shape = (1024, 1024, 3), dtype=np.int8)
                         (x, y), radius = cv2.minEnclosingCircle(cnt)
                         center = (int(x), int(y))
@@ -219,11 +220,12 @@ class extracting_seg_objects():
                         top_x = int(x) + radius
                         bot_y = int(y) - radius
                         top_y = int(y) + radius
-                        bot_x, top_x, bot_y, top_y = self.crop_part_outside_image(1024, bot_x, top_x, bot_y, top_y)
+                        bot_x, top_x, bot_y, top_y = self.crop_part_outside_image(8192, bot_x, top_x, bot_y, top_y)
                         out = out[bot_y:top_y, bot_x:top_x]
 
-                        glo_path = self.data_folder + '/' + str(label) + '/' + \
-                                   filename +'_'+ str(contours.index(cnt)) + '.png'
+                        glo_path = self.data_folder + '/' + str(label) + '/' + filename.replace('-labelled.png', '') \
+                                   +'_'+ str(cnt_count) + '.png'
+                        cnt_count+=1
                         imageio.imwrite(glo_path, out)
 
 
