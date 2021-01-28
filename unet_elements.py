@@ -1,12 +1,12 @@
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.keras.models import *
-from tensorflow.python.keras.layers import Input, merge, Conv2D, MaxPooling2D, UpSampling2D, Dropout, Cropping2D, Add, \
+from tensorflow.keras.models import *
+from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D, Dropout, Cropping2D, Add, \
     Conv2DTranspose, BatchNormalization, InputLayer, Lambda
 from tensorflow.python.keras import Input as InputUNET
-from tensorflow.python.keras.optimizers import *
-from tensorflow.python.keras import backend as keras
-from keras.losses import sparse_categorical_crossentropy, categorical_crossentropy
+from tensorflow.keras.optimizers import *
+from tensorflow.keras import backend as keras
+from tensorflow.keras.losses import sparse_categorical_crossentropy, categorical_crossentropy
 from tensorflow.python.keras.callbacks import ModelCheckpoint, LearningRateScheduler
 
 
@@ -281,9 +281,9 @@ def mini_unet_batch_norm(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS, No_Classes, LearnR
     #in this unet batch norm is included
     # inputs = InputUNET(shape=None)
     inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
-    # s = Lambda(lambda x: x / 255) (inputs)
+    s = Lambda(lambda x: x / 255) (inputs)
     # ipdb.set_trace()
-    c1 = Conv2D(8, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (inputs)
+    c1 = Conv2D(8, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (s)
     b1 = BatchNormalization() (c1)
     # c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c1)
     p1 = MaxPooling2D((2, 2)) (b1)
@@ -341,7 +341,7 @@ def mini_unet_batch_norm(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS, No_Classes, LearnR
     # c9 = Dropout(0.1) (c9)
     # c9 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c9)
 
-    outputs = Conv2D(No_Classes, (1, 1), activation='softmax') (c9)
+    outputs = Conv2D(No_Classes, (1, 1), activation='sigmoid') (c9)
 
     model = Model(inputs=[inputs], outputs=[outputs])
     model.compile(optimizer = Adam(lr=LearnRate), loss= 'categorical_crossentropy' , metrics=['acc'])
@@ -452,9 +452,9 @@ def narrow_deep_Anet(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS, No_Classes, LearnRate)
     #in this unet batch norm is included
     # inputs = InputUNET(shape=None)
     inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
-    # s = Lambda(lambda x: x / 255) (inputs)
+    s = Lambda(lambda x: x / 255) (inputs)
     # ipdb.set_trace()
-    c1 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (inputs)
+    c1 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (s)
     b1 = BatchNormalization() (c1)
     # c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='glorot_uniform', padding='same') (c1)
     p1 = MaxPooling2D((2, 2)) (b1)
@@ -489,19 +489,19 @@ def narrow_deep_Anet(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS, No_Classes, LearnRate)
     c8 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p7)
     b8 = BatchNormalization() (c8)
     p8 = MaxPooling2D(pool_size=(2, 2)) (b8)
+    #this 9th block is taken out for images of size 256 because it will convolute it to size 0
+    # c9 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p8)
+    # b9 = BatchNormalization() (c9)
+    # p9 = MaxPooling2D(pool_size=(2, 2)) (b9)
 
-    c9 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p8)
-    b9 = BatchNormalization() (c9)
-    p9 = MaxPooling2D(pool_size=(2, 2)) (b9)
-
-    c10 = Conv2D(8, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p9)
+    c10 = Conv2D(8, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (p8)
     drop10 = Dropout(0.5) (c10)
 
-    u11 = Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same') (drop10)
-    u11 = Add()([u11, c9])
-    c11 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u11)
+    # u11 = Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same') (drop10)
+    # u11 = Add()([u11, c9])
+    # c11 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u11)
 
-    u12 = Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same') (c11)
+    u12 = Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same') (drop10)
     u12 = Add()([u12, c8])
     c12 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u12)
 
@@ -534,9 +534,13 @@ def narrow_deep_Anet(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS, No_Classes, LearnRate)
     c19 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same') (u19)
 
     outputs = Conv2D(No_Classes, (1, 1), activation='softmax') (c19)
+    if No_Classes > 2:
+        loss = 'categorical_crossentropy'
+    else:
+        loss = 'binary_crossentropy'
 
     model = Model(inputs=[inputs], outputs=[outputs])
-    model.compile(optimizer = Adam(lr=LearnRate), loss= 'categorical_crossentropy' , metrics=['acc'])
+    model.compile(optimizer = Adam(lr=LearnRate), loss= loss , metrics=['acc'])
 
     return model
 
@@ -720,7 +724,11 @@ def filter_Net(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS, No_Classes, LearnRate):
     outputs = Conv2D(No_Classes, (1, 1), activation='softmax') (c19)
 
     model = Model(inputs=[inputs], outputs=[outputs])
-    model.compile(optimizer = Adam(lr=LearnRate), loss= 'categorical_crossentropy' , metrics=['acc'])
+    if No_Classes > 2:
+        loss = 'binary_crossentropy'
+    else:
+        loss = 'categorical_crossentropy'
+    model.compile(optimizer = Adam(lr=LearnRate), loss= loss , metrics=['acc'])
 
     return model
 

@@ -11,6 +11,7 @@ import cv2
 import imageio
 import image_slicer
 import matplotlib.pyplot as plt
+from keras.utils.np_utils import to_categorical
 
 # im = gdal.Open('crop_1.tif')
 # myarray = np.array(im.GetRasterBand(1).ReadAsArray())
@@ -31,7 +32,7 @@ class read_n_play_now():
         self.result_img_path = self.results_dir_path + '/mgs_mask_test.npy'
         self.train_dir_path = self.data_dir_path + '/train'
         self.slides_dir = "/media/mihael/Hard/MUW NEW SLIDES/slide8-disease-name/tiles2"
-        self.img_dir_path = self.train_dir_path + '/image'
+        self.img_dir_path = '/home/mihael/ML/glo_seg_tensorflow/MAIN/data/train'
         self.label_dir_path = self.train_dir_path + '/label'
         self.img_play_dir = self.train_dir_path + '/image_play'
         self.label_play_dir = self.train_dir_path + '/label_play'
@@ -70,8 +71,8 @@ class read_n_play_now():
         except OSError:
             print ("Creation of the directory failed" )
 
-        self.img_dir_path = self.slides_dir + "/img"
-        self.label_dir_path = self.slides_dir + "/lbl"
+        # self.img_dir_path = self.slides_dir + "/img"
+        # self.label_dir_path = self.slides_dir + "/lbl"
         _, _, files = next(os.walk(self.img_dir_path))
         for filename in files:
             image_path = self.img_dir_path + "/" + filename
@@ -362,5 +363,9 @@ if __name__ == '__main__':
     # r_n_p.copy_paste_files()
     # r_n_p.lower_resolution(1024)
     # r_n_p.labels_to_3_classes()
-    ext = extracting_seg_objects()
-    ext.extracting_objects_from_mask(label_list=[2,3,4,5])
+    # ext = extracting_seg_objects()
+    # ext.extracting_objects_from_mask(label_list=[2,3,4,5])
+    # arr = np.load('/home/mihael/ML/glo_seg_tensorflow/ground_truth_array.npy')
+    img = cv2.imread('/home/mihael/ML/glo_seg/data/labels_part/200209761_09_SFOG [x=32768,y=0,w=4096,h=4096]-labelled.png', cv2.IMREAD_GRAYSCALE)#/255SAssociates
+    train_mask = to_categorical(img, num_classes=3, dtype='uint8')
+    print ('jebiga')

@@ -14,6 +14,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import classification_report
 import time
+from tensorflow.keras.layers import  Lambda
 # config = ConfigProto()
 # config.gpu_options.allow_growth = True
 # session = InteractiveSession(config=config)
@@ -33,29 +34,30 @@ class prediction_and_metrics(object):
         self.data_dir_path = self.current_folder_path + '/data'
         self.train_dir_path = self.data_dir_path + '/train'
         self.img_dir_path = self.train_dir_path + '/image'
-        self.results_dir_path = self.current_folder_path + '/results_by_name'
+        self.results_dir_path = '/home/mihael/ML/glo_seg/narrow_deep_Anet/results'
         self.results_iou_path = self.current_folder_path + '/results_by_name_iou'
         self.results_dir_path_TG = self.current_folder_path + '/results_by_name_TG'
         self.results_from_training_dir_path = self.current_folder_path + '/results_from_training'
-        self.test_img_dir_path = self.data_dir_path + '/test'
-        self.test_labels_path = self.data_dir_path + '/test_labels'
+        self.test_img_dir_path = '/home/mihael/ML/glo_seg/data/img_from_train'
+        self.test_labels_path = '/home/mihael/ML/glo_seg/data/lbl_from_train'
         self.test_img_transform_path = self.data_dir_path + '/test_transform'
         self.test_labels_transform_path = self.data_dir_path + '/test_labels_transform'
-        self.ground_truth_array_path = self.current_folder_path + '/' + 'ground_truth_array.npy'
-        self.predicted_images_one_hot = self.current_folder_path + '/' + 'predicted_images_one_hot.npy'
-        self.filenames_array_path = self.current_folder_path + '/' + 'filenames_array.npy'
+        self.ground_truth_array_path = '/home/mihael/ML/glo_seg/data/ground_truth_array.npy'
+        self.predicted_images_one_hot = '/home/mihael/ML/glo_seg/data/predicted_images_one_hot.npy'
+        self.filenames_array_path = '/home/mihael/ML/glo_seg/data/filenames_array.npy'
         self.results_form_colab = self.current_folder_path + '/results_form_colab/first_run'
         self.statistics_path = self.current_folder_path + '/statistics'
         if self.number_of_classes == 2:
             self.labels = [0, 1]
-            self.conf_matrix_labels = ['glo', 'bg']
+            # self.conf_matrix_labels = ['glo', 'bg']
+            self.conf_matrix_labels = ['bg', 'glo'] # prepared for hubmap data
         elif self.number_of_classes == 3:
             self.labels = [0, 1, 2]
             self.conf_matrix_labels = ['glo', 'cells', 'bg']
         else:
             raise AssertionError ("You have more than 3 classes. This metrics calculation is suited only for 2 or 3 classes.")
 
-    # def predict(self):
+    def predict(self):
         model = load_model(self.model_path, compile=False)
         _, _, files = next(os.walk(self.test_img_dir_path))
         images_to_predict = []
@@ -64,18 +66,20 @@ class prediction_and_metrics(object):
             test_file_path = self.test_img_dir_path + '/' + filename
             ground_truth_path = self.test_labels_path + '/' + filename[:-4] + '.png'
             item_arr = np.asarray(Image.open(test_file_path))
+            # item_arr = item_arr/255
+            # item_arr = (lambda x: (x - 126))(item_arr)
             images_to_predict.append(item_arr)
             label_arr = np.asarray(Image.open(ground_truth_path))
             label_arr = label_arr.copy()
             #THIS IS SPECIFIC TO THIS CASE BECAUSE LABELS WERE 3D IMAGES WHERE CLASSES WERE ORGANIZED:
             # 0 - glomeruli, 170 - other parts of kidney tissue, 250 - background
             if self.number_of_classes == 2:
-                label_arr[label_arr==170] = 1
-                label_arr[label_arr==250] = 1
+            #     label_arr[label_arr==170] = 1
+            #     label_arr[label_arr==250] = 1
                 label_arr = to_categorical(label_arr, num_classes=self.number_of_classes, dtype = 'uint8')
             else:
-                # label_arr[label_arr==170] = 1
-                # label_arr[label_arr==250] = 2
+            #     label_arr[label_arr==170] = 1
+            #     label_arr[label_arr==250] = 2
                 label_arr = to_categorical(label_arr, num_classes=self.number_of_classes, dtype = 'uint8')
             ground_truth_array.append(label_arr)
         images_to_predict = np.asarray(images_to_predict)
@@ -278,10 +282,10 @@ class prediction_and_metrics(object):
             if self.number_of_classes == 2:
                 for row in img:
                     for cell in row:
-                        if cell[0] >= 0.9:
-                            cell[0] = 50
-                            cell[1] = 0
-                        elif cell[1] >= 0.9:
+                        if cell[0] >= 0.5:
+                            cell[0] = 0
+                            cell[1] = 50
+                        elif cell[1] >= 0.5:
                             cell[1] = 150
                             cell[0] = 0
             else:
