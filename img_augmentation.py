@@ -43,94 +43,6 @@ class aug(object):
 		self.ground_truth_array_path = self.current_folder_path + '/' + 'ground_truth_array.npy'
 		self.predicted_images_one_hot = self.current_folder_path + '/' + 'predicted_images_one_hot.npy'
 
-	def visualise_augmentations(self):
-		# _, _, files = next(os.walk(self.img_dir_path))
-		image_path = self.img_dir_path + '/9e837e99567dfd5fdb8cdfb9ab38da7c_20191223_132908_726 [x=16384,y=8192,w=8192,h=8192]_01_02.png'
-		label_path = self.label_dir_path + '/9e837e99567dfd5fdb8cdfb9ab38da7c_20191223_132908_726 [x=16384,y=8192,w=8192,h=8192]_01_02.png'
-		image = imageio.imread(image_path)
-		# label = imageio.imread(label_path)
-		label = np.asarray(Image.open(label_path))
-		# label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
-		# rotate = iaa.Affine(rotate=(45))
-		# rotate = iaa.Rotate((90))
-		# aug = iaa.PerspectiveTransform(scale= (0.09, 0.12), mode='constant', seed=15)
-		# pers_aug = iaa.PerspectiveTransform(scale= (0.08), mode='replicate', fit_output=False, seed=15)
-		# aug = iaa.ElasticTransformation(alpha=(5), sigma=(2.5), mode='nearest')
-		# aug = iaa.imgcorruptlike.GaussianNoise(severity=2)
-		# aug = iaa.imgcorruptlike.Saturate(severity=4)
-		# aug = iaa.imgcorruptlike.DefocusBlur(severity=2)
-		# aug = iaa.Invert(1)
-		# aug = iaa.MedianBlur(k=(11))
-		# aug = iaa.imgcorruptlike.
-		# aug = iaa.GammaContrast((2.0))
-		# aug = iaa.SigmoidContrast(gain=(8), cutoff=(0.2), per_channel=True)
-		# aug = iaa.Emboss(alpha=(1.0), strength=(0.2))
-		# aug = iaa.pillike.Autocontrast((5,20), per_channel=True)
-		# augmented = aug.augment_image(image)
-		# augmented_label = aug.augment_image(label)
-		# aug = iaa.imgcorruptlike.
-
-
-		#############MAKING THE SAME AUGMENTATION FOR IMAGES AND MASKS AT ONCE WHEN USING imgaug
-		# seq = iaa.Sequential([aug, pers_aug])
-		# # label[label==170] = 1
-		# # label[label==250] = 2
-		# # label_arr = to_categorical(label, num_classes=3, dtype = 'uint8')
-		# img_arr = np.reshape(image, (1, image.shape[0], image.shape[1], 3))
-		# label_arr = np.reshape(label, (1, label.shape[0], label.shape[1], 4))
-		# # ipdb.set_trace()
-		# # image =
-		# aug_img, aug_label = seq(images = img_arr, segmentation_maps = label_arr)
-		# aug_img_back = np.reshape(aug_img, (image.shape[0], image.shape[1], 3))
-		# aug_label_back = np.reshape(aug_label, (label.shape[0], label.shape[1], 4))
-		########################################################################
-
-		#USING AUGMENTOR #################################################################
-		# p = Augmentor.Pipeline('/media/mihael/Hard/MUW NEW SLIDES/slide3-disease-name/tiles2/aug_test')
-		# p.ground_truth('/media/mihael/Hard/MUW NEW SLIDES/slide3-disease-name/tiles2/aug_test/lbl')
-		# p.random_distortion(probability=1, grid_width=16, grid_height=16, magnitude=20)
-		# aug_img, aug_lbl = p.sample(1)
-		# p.ImageDataGenerator.flow()
-		# g = p.keras_generator(batch_size=1)
-		# aug_img, aug_lbl = next(g)
-		##################################################################################
-
-		#USING AULBUMENTATIONS #################################################################
-		# aug = A.ElasticTransform(p=1, alpha=400, sigma=20, alpha_affine=0.5,
-		# 						 border_mode=cv2.BORDER_REPLICATE, interpolation=cv2.INTER_LINEAR)
-		aug = A.RandomRotate90(p=1)
-		# aug = A.Blur(blur_limit=(5,8), always_apply=False, p=1)
-		# aug = A.CLAHE (clip_limit=(4.0, 16.0), tile_grid_size=(4, 4), always_apply=False, p=1)
-		# aug = A.Downscale (scale_min=0.25, scale_max=0.4, interpolation=0, always_apply=False, p=1)
-		# aug = A.Equalize (mode='cv', by_channels=True, mask=None, mask_params=(), always_apply=False, p=1)
-		# aug = A.GaussNoise (var_limit=(50, 100), mean=0, always_apply=False, p=1)
-		# aug = A.HueSaturationValue (hue_shift_limit=30, sat_shift_limit=30, val_shift_limit=30, always_apply=False, p=1)
-		# aug = A.IAAEmboss (alpha=(0.5, 0.8), strength=(0.5, 0.8), always_apply=False, p=1)
-		# aug = A.IAASharpen (alpha=(0.5, 0.8), lightness=(0.8, 1), always_apply=False, p=1)
-		# aug = A.Solarize (threshold=(100,200), always_apply=False, p=1)
-		augmented = aug(image=image, mask=label)
-
-		# aug_label = self.elastic_transform(label, alpha=120, sigma=120 * 0.05, random_state=None)
-		image_elastic = augmented['image']
-		mask_elastic = augmented['mask']
-		##################################################################################
-
-		# image_reshaped = np.reshape(aug_img, (image.shape[1],image.shape[2],image.shape[3]))
-		# label_reshaped = np.reshape(aug_lbl, (image.shape[1],image.shape[2],image.shape[3]))
-		# plt.axis('off')
-		plt.style.use('classic')
-		plt.imshow(image)
-		plt.show()
-		plt.imshow(image_elastic)
-		plt.show()
-		plt.imshow(mask_elastic)
-		plt.show()
-		# ia.imshow(img_deformed)
-		# ia.imshow(lbl_deformed)
-
-		image_from_array = Image.fromarray(mask_elastic.astype(np.uint8))
-		image_from_array.save('/media/mihael/Hard/MUW NEW SLIDES/Augmented_images/aug_testing/aug.png')
-
 	def save_original_images(self, img_source_folder, lbl_source_folder, img_destination_folder, lbl_destination_folder):
 		_, _, files = next(os.walk(img_source_folder))
 		counter = 1
@@ -204,6 +116,85 @@ class aug(object):
 				self.save_augmented_images(aug_name = 'sharpen', augmented_items=aug_dict['sharpen'](image=image, mask=label),
 										   image_name=counter)
 			counter+=1
+
+	def visualise_augmentations(self):
+		# _, _, files = next(os.walk(self.img_dir_path))
+		image_path = self.img_dir_path + '/9e837e99567dfd5fdb8cdfb9ab38da7c_20191223_132908_726 [x=16384,y=8192,w=8192,h=8192]_01_02.png'
+		label_path = self.label_dir_path + '/9e837e99567dfd5fdb8cdfb9ab38da7c_20191223_132908_726 [x=16384,y=8192,w=8192,h=8192]_01_02.png'
+		image = imageio.imread(image_path)
+		# label = imageio.imread(label_path)
+		label = np.asarray(Image.open(label_path))
+		# label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
+		# rotate = iaa.Affine(rotate=(45))
+		# rotate = iaa.Rotate((90))
+		# aug = iaa.PerspectiveTransform(scale= (0.09, 0.12), mode='constant', seed=15)
+		# pers_aug = iaa.PerspectiveTransform(scale= (0.08), mode='replicate', fit_output=False, seed=15)
+		# aug = iaa.ElasticTransformation(alpha=(5), sigma=(2.5), mode='nearest')
+		# aug = iaa.imgcorruptlike.GaussianNoise(severity=2)
+		# augmented = aug.augment_image(image)
+		# augmented_label = aug.augment_image(label)
+		# aug = iaa.imgcorruptlike.
+
+
+		#############MAKING THE SAME AUGMENTATION FOR IMAGES AND MASKS AT ONCE WHEN USING imgaug
+		# seq = iaa.Sequential([aug, pers_aug])
+		# # label[label==170] = 1
+		# # label[label==250] = 2
+		# # label_arr = to_categorical(label, num_classes=3, dtype = 'uint8')
+		# img_arr = np.reshape(image, (1, image.shape[0], image.shape[1], 3))
+		# label_arr = np.reshape(label, (1, label.shape[0], label.shape[1], 4))
+		# # ipdb.set_trace()
+		# # image =
+		# aug_img, aug_label = seq(images = img_arr, segmentation_maps = label_arr)
+		# aug_img_back = np.reshape(aug_img, (image.shape[0], image.shape[1], 3))
+		# aug_label_back = np.reshape(aug_label, (label.shape[0], label.shape[1], 4))
+		########################################################################
+
+		#USING AUGMENTOR #################################################################
+		# p = Augmentor.Pipeline('/media/mihael/Hard/MUW NEW SLIDES/slide3-disease-name/tiles2/aug_test')
+		# p.ground_truth('/media/mihael/Hard/MUW NEW SLIDES/slide3-disease-name/tiles2/aug_test/lbl')
+		# p.random_distortion(probability=1, grid_width=16, grid_height=16, magnitude=20)
+		# aug_img, aug_lbl = p.sample(1)
+		# p.ImageDataGenerator.flow()
+		# g = p.keras_generator(batch_size=1)
+		# aug_img, aug_lbl = next(g)
+		##################################################################################
+
+		#USING AULBUMENTATIONS #################################################################
+		# aug = A.ElasticTransform(p=1, alpha=400, sigma=20, alpha_affine=0.5,
+		# 						 border_mode=cv2.BORDER_REPLICATE, interpolation=cv2.INTER_LINEAR)
+		aug = A.RandomRotate90(p=1)
+		# aug = A.Blur(blur_limit=(5,8), always_apply=False, p=1)
+		# aug = A.CLAHE (clip_limit=(4.0, 16.0), tile_grid_size=(4, 4), always_apply=False, p=1)
+		# aug = A.Downscale (scale_min=0.25, scale_max=0.4, interpolation=0, always_apply=False, p=1)
+		# aug = A.Equalize (mode='cv', by_channels=True, mask=None, mask_params=(), always_apply=False, p=1)
+		# aug = A.GaussNoise (var_limit=(50, 100), mean=0, always_apply=False, p=1)
+		# aug = A.HueSaturationValue (hue_shift_limit=30, sat_shift_limit=30, val_shift_limit=30, always_apply=False, p=1)
+		# aug = A.IAAEmboss (alpha=(0.5, 0.8), strength=(0.5, 0.8), always_apply=False, p=1)
+		# aug = A.IAASharpen (alpha=(0.5, 0.8), lightness=(0.8, 1), always_apply=False, p=1)
+		# aug = A.Solarize (threshold=(100,200), always_apply=False, p=1)
+		augmented = aug(image=image, mask=label)
+
+		# aug_label = self.elastic_transform(label, alpha=120, sigma=120 * 0.05, random_state=None)
+		image_elastic = augmented['image']
+		mask_elastic = augmented['mask']
+		##################################################################################
+
+		# image_reshaped = np.reshape(aug_img, (image.shape[1],image.shape[2],image.shape[3]))
+		# label_reshaped = np.reshape(aug_lbl, (image.shape[1],image.shape[2],image.shape[3]))
+		# plt.axis('off')
+		plt.style.use('classic')
+		plt.imshow(image)
+		plt.show()
+		plt.imshow(image_elastic)
+		plt.show()
+		plt.imshow(mask_elastic)
+		plt.show()
+		# ia.imshow(img_deformed)
+		# ia.imshow(lbl_deformed)
+
+		image_from_array = Image.fromarray(mask_elastic.astype(np.uint8))
+		image_from_array.save('/media/mihael/Hard/MUW NEW SLIDES/Augmented_images/aug_testing/aug.png')
 
 
 if __name__ == '__main__':

@@ -247,22 +247,7 @@ class extracting_seg_objects():
 # 	tiles = image_slicer.slice(mask_file_path, portions, save=False)
 # 	image_slicer.save_tiles(tiles, directory=test_labels_1024_path, prefix=filename_no_sufix, format='PNG')
 ##################################################################################
-
-#TAKIN NAMES OF IMAGES AND MAKING THEM SHORTER#######################################
-# counter = 1
-# for filename in os.listdir(train_images_path):
-# 	file_path = train_images_path + '/' + filename
-# 	stain_name = filename.split('_')
-# 	stain_name = stain_name[0]
-# 	new_name_file_path = masks_altering_path + '/' + stain_name + '_' + str(counter) + '.jpg'
-# 	# og_img_name = filename.replace('_Mask', '')
-# 	# I = np.asarray(Image.open(file_path))
-# 	# I.shape = [2048, 2048, 1]
-# 	# ipdb.set_trace()
-# 	# masks_altering_path_path = masks_altering_path + '/' + og_img_name
-# 	shutil.copyfile(file_path, new_name_file_path)
-# 	counter += 1
-###############################################################################
+#
 # 	file_path = masks_altering_path + '/' + filename
 # 	arr_mask = np.asarray(Image.open(file_path))
 # 	arr_mask = arr_mask.copy()
@@ -274,19 +259,6 @@ class extracting_seg_objects():
 # 	print(counter)
 # print (counter)
 # im_array = np.array(im)
-
-#CREATING MASKS WITH 0 AND 255 AS VALUES###################################################
-# w, h, d = 4096, 4096, 3
-# list_0 = [[[0 for x in range(d)] for y in range(h)] for z in range(w)]
-# arr_0 = np.asarray(list_0)
-# list_255 = [[[255 for x in range(d)] for y in range(h)] for z in range(w)]
-# arr_255 = np.asarray(list_255)
-# arr_0 = [[[0, 0, 0] for y in range(h)] for z in range(w)]
-# im_0 = Image.fromarray(arr_0.astype(np.uint8))
-# im_0.save("arr_0.jpg")
-# im_255 = Image.fromarray(arr_255.astype(np.uint8))
-# im_255.save("arr_255.jpg")
-############################################################################################
 
 #3D masks to 2D  masks converter -> RGB to grayscale ###################################
 # all_images_path = current_folder_path + '/all_images'
@@ -327,37 +299,7 @@ class extracting_seg_objects():
 # 	im1.save(png_image_path)
 ##################################################################################
 
-######################################################Elastic transform
-# from scipy.ndimage.interpolation import map_coordinates
-# from scipy.ndimage.filters import gaussian_filter
-# def elastic_transform(self, image, alpha, sigma, random_state=None):
-#     """Elastic deformation of images as described in [Simard2003].
-#
-#     .. [Simard2003] Simard, Steinkraus and Platt, "Best Practices for
-#        Convolutional Neural Networks applied to Visual Document Analysis", in
-#        Proc. of the International Conference on Document Analysis and
-#        Recognition, 2003.
-#     """
-#     if random_state is None:
-#         random_state = np.random.RandomState(None)
-#
-#     h, w = image.shape[:2]
-#     x, y = np.meshgrid(np.arange(w), np.arange(h))
-#     dx = gaussian_filter((random_state.rand(h,w) * 2 - 1), sigma, mode="constant", cval=0) * alpha
-#     dy = gaussian_filter((random_state.rand(h,w) * 2 - 1), sigma, mode="constant", cval=0) * alpha
-#     indices = np.reshape(y+dy, (-1, 1)), np.reshape(x+dx, (-1, 1))
-#
-#     if len(image.shape) > 2:
-#         c = image.shape[2]
-#         distored_image = [map_coordinates(image[:,:,i], indices, order=1, mode='reflect') for i in range(c)]
-#         distored_image = np.concatenate(distored_image, axis=1)
-#     else:
-#         distored_image = map_coordinates(image, indices, order=1, mode='reflect')
-#
-#     return distored_image.reshape(image.shape)
-###################################################################################
-# ipdb.set_trace()
-# pdb.set_trace()
+
 if __name__ == '__main__':
     r_n_p = read_n_play_now()
     # r_n_p.copy_paste_files()
@@ -366,6 +308,4 @@ if __name__ == '__main__':
     # ext = extracting_seg_objects()
     # ext.extracting_objects_from_mask(label_list=[2,3,4,5])
     # arr = np.load('/home/mihael/ML/glo_seg_tensorflow/ground_truth_array.npy')
-    img = cv2.imread('/home/mihael/ML/glo_seg/data/labels_part/200209761_09_SFOG [x=32768,y=0,w=4096,h=4096]-labelled.png', cv2.IMREAD_GRAYSCALE)#/255SAssociates
-    train_mask = to_categorical(img, num_classes=3, dtype='uint8')
-    print ('jebiga')
+

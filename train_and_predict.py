@@ -42,15 +42,11 @@ class unet_training(object):
         self.trained_models_path = '/home/mihael/ML/glo_seg_tensorflow/MAIN/trained_models'
         self.trained_models_server = self.trained_models_path + '/Trained_On_Server'
         self.data_dir_path = self.current_folder_path + '/data'
-        self.results_dir_path = '/home/mihael/ML/glo_seg/narrow_deep_Anet/results_by_name'
+        self.results_dir_path = '/media/mihael/Hard/ML/glo_seg_tensorflow/MAIN/results_by_name'
         self.result_img_path = self.results_dir_path + '/mgs_mask_test.npy'
         self.train_dir_path = self.data_dir_path + '/train'
         self.img_dir_path = '/home/mihael/ML/glo_seg/data/train_256'
         self.label_dir_path = '/home/mihael/ML/glo_seg/data/masks_256'
-        self.img_play_dir = '/home/mihael/ML/glo_seg_tensorflow/MAIN/data/train/image_play'
-        self.label_play_dir = '/home/mihael/ML/glo_seg_tensorflow/MAIN/data/train/label_play'
-        # self.img_play_dir = '/home/mihael/ML/glo_seg/data/train_play'
-        # self.label_play_dir = '/home/mihael/ML/glo_seg/data/masks_play'
         self.test_img_dir_path = self.data_dir_path + '/test'
         self.npy_dir_path = self.current_folder_path + '/npydata'
         self.statistics_path = '/home/mihael/ML/glo_seg/narrow_deep_Anet/statistics'
@@ -141,8 +137,8 @@ if __name__ == '__main__':
     new_model_name = 'TEST_image_play_Anet_TEST'
     train_from_array = False #True - it will load training samples and labels which are saved as numpy array,
     # False - it will load training samples and labels which are saved as images in self.img_dir_path and  self.label_dir_path
-    train_and_predict = False
-    just_train = True
+    train_and_predict = True
+    just_train = False
     just_predict = False
 
     if train_and_predict or just_train:
@@ -169,41 +165,3 @@ if __name__ == '__main__':
         end = time.time()
         print (':::::::Time needed for prediction, metrics calculation and converting to images:::::::')
         timer(start, end)
-
-
-
-'''
-LIST OF SOME BUGS AND HOW THEY WERE HANDLED
-
-1)
-self.results[0] /= self.num_samples_or_steps
-IndexError: list index out of range
-- i think there was a problem because I had batch size 1, after I changed it to
-8 error was gone, but then next error happened:
-
-2)
-tensorflow.python.framework.errors_impl.UnknownError: Failed to get convolution algorithm. 
-This is probably because cuDNN failed to initialize, so try looking to see if a warning 
-log message was printed above.
-	 [[{{node conv2d/Conv2D}}]]
-	 [[{{node loss/mul}}]]
-https://github.com/tensorflow/tensorflow/issues/24828
-SOLVED WITH ADDING:
-from tensorflow.compat.v1 import ConfigProto
-from tensorflow.compat.v1 import InteractiveSession
-config = ConfigProto()
-config.gpu_options.allow_growth = True
-session = InteractiveSession(config=config)
-
-3)
-TypeError: Input 'y' of 'Equal' Op has type float32 that does not match type int32 of argument 'x'.
-
-maybe the wrong optimizer was used, so instead of:
-model.compile(optimizer = Adam(lr=LearnRate), loss= 'sparse_categorical_crossentropy' , metrics=['acc'])
-
-I use:
-model.compile(
-            optimizer=keras.optimizers.Adadelta(),
-            loss='sparse_categorical_crossentropy',
-            metrics=['sparse_categorical_accuracy'])
-'''

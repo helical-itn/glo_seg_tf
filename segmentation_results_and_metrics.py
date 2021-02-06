@@ -66,8 +66,6 @@ class prediction_and_metrics(object):
             test_file_path = self.test_img_dir_path + '/' + filename
             ground_truth_path = self.test_labels_path + '/' + filename[:-4] + '.png'
             item_arr = np.asarray(Image.open(test_file_path))
-            # item_arr = item_arr/255
-            # item_arr = (lambda x: (x - 126))(item_arr)
             images_to_predict.append(item_arr)
             label_arr = np.asarray(Image.open(ground_truth_path))
             label_arr = label_arr.copy()
@@ -129,9 +127,6 @@ class prediction_and_metrics(object):
         np.save(self.predicted_images_one_hot, predicted_images_one_hot)
         np.save(self.filenames_array_path, filenames_array)
 
-    # m = MeanIoU(num_classes=3)
-    # print (m.update_state(ground_truth_array, predicted_images_one_hot))
-    # - MeanIoU works only for Tensorflow >2.0
 
     def metrics_for_each_image(self, predicted_folder, ground_truth_folder):
         '''CALCULATING METRICS BASED ON SAVED IMAGES'''
